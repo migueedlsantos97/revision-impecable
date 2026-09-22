@@ -121,6 +121,42 @@ buscá el peor píxel dentro de esas cajas. Cuando el resultado te sorprenda,
 renderizá el compuesto a un archivo y miralo: es la forma barata de descubrir
 que la geometría estaba mal.
 
+## La cache guardada no la cambia una cabecera nueva
+
+**[caso real]** Cambiar `Cache-Control` solo afecta a lo que se pida **desde
+ahora**. Un navegador que ya bajo `app.js` con `max-age=3600` no lo vuelve a
+pedir hasta que pase esa hora, diga lo que diga el servidor. Un arreglo
+desplegado puede tardar horas en llegar a un telefono concreto, y no hay forma
+de distinguirlo de un arreglo que no funciona.
+
+Para que llegue hoy hay que **cambiarle la direccion**: `app.js?v=2`. Ojo con
+los modulos que se piden desde adentro (`import from './otro.js'`): esos los
+pide el navegador por su cuenta y tienen su propia copia guardada, asi que
+tambien hay que versionarlos.
+
+Y la regla que evita todo esto: **mientras se esta iterando, los archivos que
+se tocan no llevan cache larga.** El CSS y el JS suelen pesar decenas de KB y
+revalidar cuesta un 304 de doscientos bytes. La cache larga se reserva para lo
+que de verdad pesa y no cambia: fuentes, bibliotecas de terceros, imagenes.
+
+Cuidado tambien con que las reglas **se acumulan**: dos patrones que matchean el
+mismo archivo salen concatenados en una sola cabecera contradictoria, del tipo
+`max-age=2592000, max-age=31536000, immutable`. Se comprueba con
+`curl -sI <url> | grep -i cache-control`.
+
+## No ver algo no es prueba de nada
+
+**[caso real]** Medi que un modulo pesado "no se habia pedido" y lo di por
+verificado. No se habia pedido porque el `IntersectionObserver` que lo carga
+nunca se disparo en una pestaña que no estaba pintando: la condicion que yo
+creia estar probando ni siquiera se habia evaluado.
+
+**Una observacion negativa en un entorno que miente no prueba nada.** Antes de
+aceptar un "no paso", hay que demostrar que la cosa **tuvo la oportunidad de
+pasar**: que el observador se disparo, que el evento se entrego, que la funcion
+se llamo. Si no se puede demostrar, el veredicto es PLAUSIBLE, no CONFIRMADO, y
+se dice en el informe.
+
 ## Verificar en el navegador
 
 Los tests de archivo no ven nada de esto. Hay que abrir el sitio.
