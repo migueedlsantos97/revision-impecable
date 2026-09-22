@@ -51,6 +51,42 @@ En cada ancho que pruebes:
 Los elementos escondidos a propósito fuera de pantalla (honeypots, textos solo
 para lectores) aparecen acá. Reconocelos y no los reportes.
 
+## Lo que no cambia al cambiar el tema
+
+**[caso real]** Cuando el sitio tiene temas, modos o variantes, el defecto no es
+que falte el token sino que unos cuantos lugares tienen el valor base escrito a
+mano. Se encuentra en dos pasos.
+
+Primero, contá quién usa el token y quién no:
+
+```bash
+grep -o 'var(--acento)' *.css | wc -l
+grep -oE '#(d4c1a2|f5d9a6|dfd4c3)' *.css   # la familia del valor base
+```
+
+Segundo, y es el que no falla: sacale una foto a los colores calculados, cambiá
+el tema, sacale otra, y listá lo que quedó igual.
+
+```js
+const nodos = [...document.querySelectorAll('body *')];
+const foto = () => nodos.map(e => { const s = getComputedStyle(e);
+  return s.color + '|' + s.backgroundColor + '|' + s.borderTopColor; });
+const antes = foto();
+document.body.dataset.mood = '<otro tema>';
+document.body.offsetHeight;
+await new Promise(r => setTimeout(r, 150));
+const despues = foto();
+nodos.map((e, i) => antes[i] === despues[i] ? null : i).filter(i => i !== null).length;
+// y al revés: los que NO cambiaron y deberían
+nodos.filter((e, i) => antes[i] === despues[i] && /accent|tinte|borde/.test(getComputedStyle(e).cssText || ''))
+     .map(e => e.tagName + '.' + String(e.className).slice(0, 30));
+```
+
+Separá siempre los que **deben** quedarse quietos: los estados semánticos
+(disponible, error), los neutros, y cualquier color que represente algo literal
+—un degradado que dibuja un atardecer tiene que seguir siendo ámbar en todos
+los temas—. Esos se nombran en el informe para que nadie los "arregle" después.
+
 ## Lo que `curl` no ve
 
 **[caso real]** Las plataformas de borde inyectan scripts en el HTML solo cuando

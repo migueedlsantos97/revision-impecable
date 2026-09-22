@@ -29,6 +29,17 @@ Buscá:
 - **Excepciones sin motivo escrito.** Un ícono rotado se difumina y pide más
   trazo; una estrella de seis puntas se empasta y pide menos. Si no podés
   escribir el motivo, no es excepción: es descuido.
+- **[caso real] Si el sitio tiene temas, variantes o modos, cambialos y mirá
+  qué NO cambia.** El defecto típico no es que falte el token: es que el token
+  existe, lo usan treinta reglas, y otras trece tienen el valor base escrito a
+  mano. El tema se aplica a medias y el resultado se ve peor que si no hubiera
+  tema, porque la mitad de la pantalla contradice a la otra. La técnica está en
+  `tecnicas.md`, "Lo que no cambia al cambiar el tema".
+- **[caso real] Un token derivado se declara donde vive el valor del que
+  depende.** Si el tema redefine `--accent` en `body` y vos declarás
+  `--tinte: color-mix(..., var(--accent), ...)` en `:root`, esa mezcla resuelve
+  con el `--accent` de `:root`, que es siempre el base. El token existe, no da
+  error, y el tema no llega nunca.
 - **Pares que conviven.** Dos botones flotantes que ocupan el mismo lugar de la
   pantalla y se turnan tienen que ser el mismo botón, no uno tinta y otro
   violeta. Lo mismo con dos tarjetas hermanas, dos estados de un control, dos
