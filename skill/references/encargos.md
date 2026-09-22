@@ -75,6 +75,41 @@ pinta el navegador o el sistema, cambia entre máquinas y rompe la paleta.
 Mirá también **la fuente de respaldo**: si la familia declarada no carga, ¿con
 qué se ve? Una pila que termina en `serif` a secas deja el sitio en Times.
 
+### **[caso real]** Lo que no se estila: hay que reemplazar el control
+
+La tabla de arriba resuelve el **campo**. Pero hay tres controles cuyo **panel
+desplegable lo dibuja el navegador fuera de la página**, y ahí no llega ningún
+CSS. Se ven de fábrica por más que el campo esté impecable, y solo se arreglan
+no usando el control nativo:
+
+| Qué | Qué se ve | Única salida |
+|---|---|---|
+| La lista de opciones de un `<select>` | el menú del sistema, con su azul de selección | un listbox propio: botón + `<ul role="listbox">`, con el valor en un input escondido |
+| El calendario de un `<input type="date">` | el datepicker del navegador, distinto en cada uno | un calendario propio |
+| Las sugerencias de autocompletado | lo que el navegador guardó de **otros formularios**, datos de cualquier sitio | `autocomplete="off"` en el campo |
+
+Las dos primeras son trabajo de verdad, no una línea de CSS. La tercera sí es
+una línea, y es la que más incomoda: al tocar el buscador aparecían nombres y
+números de otros sitios sobre el panel privado del cliente.
+
+**Cómo se encuentra sin abrir el navegador:**
+
+```bash
+grep -c '<select\|type="date"\|type="time"\|type="color"\|type="file"' *.html
+grep -c "el('select'\|createElement('select')" *.js
+grep -c 'autocomplete="off"' *.html
+```
+
+**Dos trampas al construir el reemplazo**, las dos costaron una vuelta:
+
+- **El panel se recorta.** Dentro de un `<dialog>` o de cualquier contenedor con
+  `overflow`, un desplegable posicionado en absoluto queda cortado. Se resuelve
+  con `popover`, que lo manda a la capa superior, posicionándolo a mano.
+- **Un input escondido no lo valida el navegador.** Si el valor vive en un
+  `type="hidden"`, `required` no hace nada y el formulario se envía vacío. Hay
+  que validarlo en el código, que además es lo que corresponde si el formulario
+  ya lleva `novalidate`.
+
 ### 3. Contraste y color
 
 Nunca digas "se ve bien". Calculá la razón con la fórmula de luminancia relativa
