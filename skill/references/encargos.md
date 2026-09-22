@@ -88,11 +88,18 @@ mirar el peor punto, no el promedio.
 - Recorré con Tab. **Toda acción que se hace con el mouse tiene que poder
   hacerse con teclado.** Un `<span onclick>` dentro de un `<button>` no es
   focusable y no responde a Enter.
-- **El foco nunca se puede perder.** Si un control se deshabilita con el foco
-  encima, el foco cae a `<body>` y el siguiente Tab reinicia desde arriba del
-  documento. Los tres lugares donde pasa siempre: flechas de navegación que
-  llegan al límite del rango, listas que se deshabilitan mientras cargan, y el
-  fieldset que contiene al botón de enviar. Movelo **antes** de deshabilitar.
+- **El foco nunca se puede perder** — pero medí antes de afirmarlo.
+  **[caso real]** Este encargo decía que deshabilitar un control enfocado tira
+  el foco a `<body>` y que el Tab siguiente reinicia desde el tope. Un revisor
+  lo midió en Chrome 152 y es falso: `disabled` y `hidden` conservan el foco, y
+  al caer a `<body>` el navegador guarda el punto de partida secuencial. Los dos
+  casos que **sí** lo pierden son **quitar del DOM el nodo enfocado** y
+  **deshabilitar un `<fieldset>` que lo contiene**. Buscá esos dos: listas que
+  se redibujan enteras con el foco adentro, diálogos que recalculan sus botones
+  después de una acción, y el fieldset del botón de enviar. Movelo antes.
+- **[caso real] Anunciá también el éxito, no solo el error.** Una acción que
+  cambia el estado y solo avisa cuando falla deja a quien no ve la pantalla sin
+  saber si pasó algo. Es el agujero más caro en un panel que se usa a diario.
 - Ningún anillo de foco puede quedar tapado por un degradado, una viñeta o un
   elemento por encima.
 - Los errores van con `aria-invalid` en el campo y `aria-describedby` al
@@ -148,6 +155,11 @@ mirar el peor punto, no el promedio.
   estructurados y en el perfil de Google. La consistencia es lo que pesa en el
   paquete local.
 - Promesas que el cliente no confirmó (horarios, qué incluye, plazos) no van.
+- **[caso real] Corré los tests al terminar y decí qué archivos no cubren.** Una
+  pasada de textos anterior cambió `x.guest_count` por la versión con
+  concordancia y se equivocó de variable: dejó una pantalla entera del panel
+  rota, con un `ReferenceError`, y vivió tres commits porque ninguna prueba toca
+  el render de esa pantalla.
 
 ### 6. Compatibilidad y Safari
 
@@ -214,6 +226,11 @@ Forzá y mirá:
   un celular viejo, que es justo el del público. Si no se puede medir en uno
   real, decilo y proponé el límite (por ejemplo, no cargar la escena por debajo
   de cierto ancho o con `prefers-reduced-motion`).
+- **[caso real] Las cabeceras de caché.** Un sitio puede pesar poco y aun así
+  hacer trece viajes de ida y vuelta en cada visita. Pedí `Cache-Control` de
+  cada recurso: el default de varias plataformas es `max-age=0,
+  must-revalidate`, que obliga a revalidar hasta las fuentes y las fotos que
+  nunca cambian.
 - Peticiones a terceros: cuántas, a quién, y si el sitio funciona sin ellas.
 - `preload` que no se usa dentro de los primeros segundos es peso al pedo y
   además avisa por consola.
@@ -237,7 +254,12 @@ Mirá la página como quien llega por primera vez y tiene que decidir.
   manual.
 - Título y descripción que nombren categoría y lugar, que es lo que se tipea.
 - ¿Lo que se quiere medir se está midiendo? Si hay analítica, comprobá que
-  carga y que no la bloquea la política de seguridad.
+  carga y que no la bloquea la política de seguridad. **Ojo con la prueba**: ver
+  `tecnicas.md`, "Lo que `curl` no ve".
+- **[caso real] ¿Alguien se entera cuando entra un lead?** El encargo miraba el
+  embudo hasta que la persona envía, y el punto más caro estaba después: una
+  consulta que se guarda y no le avisa a nadie muere si el dueño no abre el
+  panel. Justo la que el diseño quería rescatar.
 
 ### 11. Dirección de arte
 

@@ -34,6 +34,44 @@ escapes hubo**: defectos que alguien encontró después de que la revisión dijo
 
 ---
 
+## 2026-09-23 — Proyecto 1 (salón de eventos)
+
+Primera corrida del procedimiento completo. Once revisores, dos rondas.
+
+- **Alcance**: los once.
+- **Hallazgos**: 38 confirmados, 4 descartados. Por cajón: 7 / 9 / 22.
+- **Escapes de la corrida anterior**: 1, el globo de validación nativo. Ya
+  incorporado al encargo 2 en la corrida pasada, así que esta vez no hizo falta
+  tocar nada por él.
+- **Lo que encontró que nadie había visto**: una pestaña del panel rota por un
+  `ReferenceError` introducido tres commits antes por la propia pasada de
+  textos; el error crudo del parser de JSON mostrado al cliente al enviar; el
+  titular del hero en celular a 1,64:1; la palabra de acento de cada titular de
+  sección a 1,61:1; el chevron de los `<select>` declarado y nunca pintado.
+- **Falsos positivos**: 4. El más instructivo lo reportaron **dos revisores
+  distintos con la misma prueba equivocada**: `curl` sin cabeceras de navegador
+  no ve el script que el borde inyecta. Otro revisor **refutó su propio
+  encargo** midiendo en el navegador: deshabilitar un control enfocado no
+  pierde el foco en Chrome, y al caer a `<body>` el Tab no reinicia desde el
+  tope.
+- **Cambios a la skill**:
+  - `SKILL.md`: la ronda B se despacha en dos tandas, porque cinco revisores
+    comparten un solo navegador y chocaron en vivo.
+  - `encargos.md` 4: corregida la afirmación sobre el foco al deshabilitar, que
+    era falsa; agregado anunciar el éxito de una acción y no solo el error.
+  - `encargos.md` 5: correr los tests después de la pasada y decir qué archivos
+    no cubren.
+  - `encargos.md` 9: pedir las cabeceras de caché.
+  - `encargos.md` 10: verificar que exista un aviso cuando entra un lead.
+  - `tecnicas.md`: `curl` sin cabeceras de navegador no ve la inyección del
+    borde; el contraste sobre foto se mide sobre las cajas reales del texto.
+- **Hipótesis**: que el valor del procedimiento está sobre todo en los encargos
+  que nunca se corrieron antes. Cinco de los siete hallazgos del primer cajón
+  salieron de estados límite, rendimiento y arte, que no existían en la corrida
+  anterior. Falta un tercer proyecto para saber si se sostiene.
+- **Checks dormidos**: ninguno. Es la segunda corrida; la poda empieza a la
+  tercera.
+
 ## <fecha> — Proyecto 1 (salón de eventos)
 
 Entrada cero: la revisión que originó la skill. Se corrió a mano, sin el

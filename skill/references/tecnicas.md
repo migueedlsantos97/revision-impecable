@@ -51,6 +51,40 @@ En cada ancho que pruebes:
 Los elementos escondidos a propósito fuera de pantalla (honeypots, textos solo
 para lectores) aparecen acá. Reconocelos y no los reportes.
 
+## Lo que `curl` no ve
+
+**[caso real]** Las plataformas de borde inyectan scripts en el HTML solo cuando
+la petición parece un navegador. Un `curl` pelado no los ve, y el hallazgo sale
+al revés: "la analítica no está cargando". Dos revisores distintos de la misma
+corrida se equivocaron con la misma prueba.
+
+```bash
+curl -s https://<dominio>/ \
+  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36' \
+  -H 'Accept: text/html,application/xhtml+xml' --compressed | grep -c '<lo que buscás>'
+```
+
+Compará siempre las dos mediciones, con y sin cabeceras, antes de afirmar que
+algo falta.
+
+## Contraste sobre una foto
+
+**[caso real]** No barras el ancho entero del bloque: medí sobre **las cajas
+reales del texto**, sacadas del navegador, o vas a reportar el peor punto de una
+zona donde no cae ningún glifo.
+
+```js
+const r = document.querySelector('.hero h1');
+const rango = document.createRange(); rango.selectNodeContents(r);
+[...rango.getClientRects()].map(b => [b.left, b.top, b.right, b.bottom].map(Math.round))
+```
+
+Después componé la foto como la compone el navegador —`object-fit`,
+`object-position`, y los degradados del velo en el mismo orden que el CSS— y
+buscá el peor píxel dentro de esas cajas. Cuando el resultado te sorprenda,
+renderizá el compuesto a un archivo y miralo: es la forma barata de descubrir
+que la geometría estaba mal.
+
 ## Verificar en el navegador
 
 Los tests de archivo no ven nada de esto. Hay que abrir el sitio.

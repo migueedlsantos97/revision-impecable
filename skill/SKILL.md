@@ -63,8 +63,15 @@ Los encargos completos están en `references/encargos.md`. Las técnicas
 compartidas, en `references/tecnicas.md`. Pasale a cada revisor **su sección
 entera**, la raíz del proyecto y el contrato de salida de abajo.
 
-Van en dos rondas porque la segunda necesita el sitio corriendo. Dentro de cada
-ronda se despachan **todos a la vez, en un solo mensaje**.
+Van en dos rondas porque la segunda necesita el sitio corriendo. La ronda A se
+despacha entera, todos a la vez, en un solo mensaje.
+
+**La ronda B no.** Cinco revisores no pueden compartir un solo navegador: en la
+primera corrida real dos chocaron en vivo y uno le sacó la pestaña al otro a
+mitad de una medición. Despachá juntos los que trabajan con `curl`, con los
+archivos y con el código —rendimiento, conversión y dirección de arte— diciéndoles
+explícitamente que **no usen el navegador**, y hacé vos los que sí lo necesitan,
+anchos y estados límite, uno después del otro.
 
 **Ronda A, sobre el código:**
 
