@@ -121,6 +121,45 @@ buscá el peor píxel dentro de esas cajas. Cuando el resultado te sorprenda,
 renderizá el compuesto a un archivo y miralo: es la forma barata de descubrir
 que la geometría estaba mal.
 
+## El estado vacio esconde la mitad de los errores
+
+**[caso real]** Una marca de notificaciones partia la pestaña en dos renglones
+y estiraba las tres de 44 a 59px. No lo vi nunca: **cuando el contador esta en
+cero la marca esta oculta y no ocupa lugar**, asi que lo que probaba era
+justo el caso que no falla.
+
+Una lista vacia, un contador en cero, un dia sin eventos y un formulario sin
+tocar son los cuatro estados mas faciles de mirar y los que menos prueban.
+Antes de dar algo por verificado hay que **sembrar el estado**: el contador con
+numero y con dos digitos, la lista con filas, el dia con dos eventos, el campo
+con un error pintado. Casi siempre alcanza con escribirlo desde la consola.
+
+## Los anchos de prueba no se eligen, se preguntan
+
+**[caso real]** Verifique en 320, 360 y 393. El telefono de la persona son
+**450px CSS** —1080 fisicos sobre densidad 2,4— asi que un umbral que puse en
+430 lo dejaba afuera y el arreglo no le llegaba. Probe tres anchos y ninguno
+era el suyo.
+
+Los cortes que uno pone por reflejo (320/360/375/390/430) dejan un hueco entre
+430 y 560 donde entran muchos Android comunes. Hay que **preguntar en que
+aparato mira**, y medir ahi.
+
+Y el umbral tampoco se elige a ojo: se mide **cuanto necesita el contenido**
+—sumando los hijos mas las separaciones y el padding— y se usa ese numero mas
+un margen. Un breakpoint redondo es una corazonada disfrazada de decision.
+
+## Lo que el navegador trae del sistema cambia segun el aparato
+
+**[caso real]** `Intl.NumberFormat` con `style:'currency'` usa los datos de
+moneda que traiga el dispositivo. En mi maquina daba `$ 0` y en el telefono de
+la persona `UYU 0`, porque Chrome en Android no trae los datos de esa region.
+No habia forma de que apareciera en mis pruebas.
+
+Lo mismo vale para el formato de fechas, el orden alfabetico y los nombres de
+los meses. Cuando el texto exacto importa, **no se delega en los datos
+regionales del aparato**: se formatea el numero y se pone el simbolo a mano.
+
 ## La cache guardada no la cambia una cabecera nueva
 
 **[caso real]** Cambiar `Cache-Control` solo afecta a lo que se pida **desde
