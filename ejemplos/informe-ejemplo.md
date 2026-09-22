@@ -9,10 +9,12 @@
 ## Resumen
 
 Se revisó el sitio completo antes de mostrárselo a la dueña del salón. El
-hallazgo más caro fue funcional y silencioso: el botón que abre la política de
-privacidad vivía dentro del `<label>` de la casilla de consentimiento, así que
-abrirlo la marcaba o la desmarcaba sin que se viera, en el único campo con peso
-legal del formulario. Quedan tres decisiones de gusto a criterio del cliente y
+hallazgo más caro estaba en el único campo con peso legal del formulario: el
+botón que abre la política de privacidad vivía dentro del `<label>` de la
+casilla de consentimiento, así que su texto se pegaba al nombre del control y un
+lector de pantalla anunciaba las dos cosas como una sola frase. Ese mismo
+hallazgo traía una afirmación más grave que resultó falsa; está en los
+descartados. Quedan tres decisiones de gusto a criterio del cliente y
 una medición pendiente que necesita un teléfono de gama baja.
 
 | | |
@@ -29,7 +31,7 @@ una medición pendiente que necesita un teléfono de gama baja.
 
 | Qué se rompía | Dónde | Veredicto | Estado |
 |---|---|---|---|
-| Abrir "Cómo usamos tus datos" marcaba o desmarcaba el consentimiento, sin señal visible | `index.html:157` | CONFIRMADO | arreglado, el botón salió del label |
+| El botón dentro del `<label>` pegaba su texto al nombre de la casilla: el lector anunciaba las dos cosas como una frase | `index.html:157` | CONFIRMADO | arreglado, el botón salió del label |
 | Con teclado no había forma de abrir el detalle de una reserva: la celda abría "Bloquear fecha" | `admin/admin.js:222` | CONFIRMADO | los chips pasaron a ser botones |
 | El formulario de bloqueo mandaba `todo` y `dia`; la API acepta `todos` y `dia`. La operación fallaba y el error nombraba valores que no existen en pantalla | `admin/admin.js` | CONFIRMADO | valores alineados contra el validador |
 | El resumen contaba reservas canceladas como ingreso | `admin.js` | CONFIRMADO | filtrado por estado confirmado |
@@ -69,6 +71,7 @@ una medición pendiente que necesita un teléfono de gama baja.
 |---|---|
 | El panel se podía alcanzar codificando el path en porcentajes | Se probó contra producción: responde 307 y después la guarda de 503. No hay bypass |
 | Un `<details>` heredaba un gris sin contraste dentro del bloque oscuro | El bloque ya lo sobrescribe: 10,41:1. El revisor lo retiró él mismo |
+| Activar el botón dentro del `<label>` marcaba o desmarcaba la casilla | Falso. El navegador no dispara la activación del label cuando el clic cae en un descendiente interactivo, y un `<button>` lo es. Probado: la casilla no se mueve. **Se aceptó sin refutar y se reportó como el hallazgo más grave de la corrida.** El arreglo igual correspondía, por el nombre accesible |
 
 ## Lo que no se revisó
 
@@ -83,6 +86,13 @@ una medición pendiente que necesita un teléfono de gama baja.
 **Escapes de la revisión anterior**
 
 No aplica: primera corrida.
+
+**Falso positivo aceptado sin refutar: 1**
+
+El error más caro de la corrida, y no fue del revisor sino de creerle sin
+probarlo. Una afirmación sobre comportamiento del navegador se comprueba en el
+navegador, en dos líneas, antes de escribirla. El paso de refutación dejó de ser
+una buena idea y pasó a ser obligatorio.
 
 **Escapes de esta corrida: 1**
 

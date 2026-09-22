@@ -21,8 +21,16 @@ los otros**.
 
 No es teoría. En el primer proyecto donde se usó, yo ya había recorrido el formulario entero
 cuando un revisor de accesibilidad encontró que el botón "Cómo usamos tus
-datos" vivía dentro del label del consentimiento y, al abrirlo, marcaba o
-desmarcaba la casilla. Lo había mirado y no lo vi.
+datos" vivía dentro del label del consentimiento, y por eso su texto se pegaba
+al nombre de la casilla: quien no ve la pantalla escucha las dos cosas como una
+sola frase. Lo había mirado y no lo vi.
+
+El mismo hallazgo dejó la otra lección, más cara. El revisor afirmaba además
+que activar el botón **marcaba o desmarcaba la casilla**. Sonaba grave, era
+verosímil, y lo di por bueno sin reproducirlo. Es falso: el navegador no dispara
+la activación del label cuando el clic cae en un descendiente interactivo. Lo
+reporté como el hallazgo más grave de la revisión y no lo era. Por eso existe el
+paso 3.
 
 Y al revés: más revisores sin refutación son más ruido. En la misma sesión una
 sospecha de bypass por codificación de URL resultó falsa al probarla contra

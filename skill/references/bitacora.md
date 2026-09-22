@@ -49,6 +49,14 @@ procedimiento todavía escrito, así que sirve de línea de base.
   radios distintos, cinco grosores de trazo, y el footer estrangulado entre 761
   y 920px.
 - **Escapes de la corrida anterior**: no aplica, es la primera.
+- **Falso positivo aceptado sin refutar**: **1**, y es el peor error de la
+  corrida. Un revisor afirmó que un botón dentro del `<label>` marcaba o
+  desmarcaba la casilla. Se dio por bueno, se reportó como el hallazgo más grave
+  y recién se probó días después: el navegador no dispara el label para
+  descendientes interactivos, así que la casilla nunca se movía. El arreglo igual
+  correspondía, pero por el nombre accesible, que es bastante menos dramático.
+  Es exactamente lo que el paso 3 existe para evitar, y ocurrió antes de que el
+  paso 3 estuviera escrito.
 - **Escapes de esta corrida**: **1**. El globo de validación nativo del
   navegador. Lo encontró el cliente mirando una captura, después de que la revisión
   se dio por cerrada. Ningún encargo hablaba de controles de validación, y el

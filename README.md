@@ -19,8 +19,16 @@ que él mismo decidió hace dos horas.
 En el proyecto donde nació esta skill yo había recorrido el formulario entero,
 con cuidado, dos veces. Un revisor de accesibilidad despachado aparte encontró
 que el botón "Cómo usamos tus datos" vivía dentro del `<label>` del
-consentimiento: abrirlo marcaba o desmarcaba la casilla sin que se viera, en el
-único campo con peso legal del formulario. Lo había mirado y no lo vi.
+consentimiento, así que su texto se pegaba al nombre de la casilla: quien no ve
+la pantalla escucha "responder mi consulta cómo usamos tus datos" como una sola
+frase, y no sabe que ahí hay un botón. Lo había mirado y no lo vi.
+
+El mismo hallazgo enseñó la otra mitad. El revisor decía además que activar el
+botón **marcaba o desmarcaba la casilla**. Lo di por bueno sin reproducirlo y lo
+reporté como lo más grave de la revisión. Es falso: el navegador no dispara el
+label cuando el clic cae en un descendiente interactivo. El paso que refuta cada
+hallazgo existe por eso, y esta skill lo lleva escrito con su propio error como
+ejemplo.
 
 Y al revés: más revisores sin refutación son más ruido. En la misma sesión una
 sospecha de vulnerabilidad resultó falsa al probarla contra producción. Sin el

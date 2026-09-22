@@ -103,8 +103,17 @@ mirar el peor punto, no el promedio.
   una pestaña de fondo el frame nunca llega y el aviso queda vacío.
 - `role="grid"` exige `grid > row > gridcell`. Si no hay filas, sacá los roles:
   una lista de días es una lista.
-- Un control dentro de un `<label>` dispara el label al activarse. Un botón
-  dentro del label de una casilla **la marca o la desmarca**.
+- El nombre accesible de una casilla envuelta en `<label>` es **todo** el texto
+  del label. Un botón anidado le pega su texto al control: "Acepto que reciban
+  estos datos para responder mi consulta. Cómo usamos tus datos" se anuncia como
+  una sola frase, y quien no ve la pantalla no sabe que ahí hay un botón.
+- **[caso real] Cuidado con la versión exagerada de ese hallazgo.** Un revisor
+  afirmó que además el botón *marcaba o desmarcaba la casilla*, por estar dentro
+  del label. Es falso: el navegador no dispara la activación del label cuando el
+  clic cae en un descendiente interactivo, y un `<button>` lo es. Se aceptó sin
+  reproducirlo y se reportó como el hallazgo más grave de la revisión. Una
+  afirmación sobre comportamiento del navegador se prueba en el navegador, en
+  dos líneas, antes de escribirla.
 - **[caso real]** Si escondiste el input nativo para dibujar tu propia
   casilla, el globo de validación del navegador se queda sin dónde anclarse: no
   puede apuntar a un elemento de 1px. Esconder un control obliga a hacerse cargo

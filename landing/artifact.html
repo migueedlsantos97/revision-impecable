@@ -1,269 +1,340 @@
 <title>Revisión impecable</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..600;1,6..72,300..500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
+/* Un solo mundo visual, por decisión: panel de instrumentos. Todo pintado
+   explícito, así la página se sostiene sobre cualquier fondo del visor. */
 :root{
-  --ground:#f2f5f6; --panel:#fbfcfc; --ink:#11171b; --muted:#56646c; --faint:#7d8991;
-  --line:#d4dbdf; --hair:#e4e9eb;
-  --ok:#0e6357; --ok-soft:#0e63571a;
-  --escape:#9c3a1e; --escape-soft:#9c3a1e14;
-  --drop:#6b6a78;
+  --ground:#090d10; --panel:#101820; --raise:#16212b; --sunken:#070a0d;
+  --ink:#e9eff1; --muted:#93a3ac; --faint:#647680;
+  --line:#1f2c35; --hair:#16212a;
+  --ok:#46c8a6; --ok-soft:#46c8a61a;
+  --escape:#f08b58; --escape-soft:#f08b5817;
+  --drop:#9187cf; --drop-soft:#9187cf17;
   --display:Newsreader,Georgia,serif;
-  --sans:'IBM Plex Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   --ease:cubic-bezier(.2,.7,.2,1);
-  color-scheme:light dark;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --ground:#0c1013; --panel:#131a1f; --ink:#e7edef; --muted:#9aa8b0; --faint:#7d8b93;
-    --line:#26313a; --hair:#1c252c;
-    --ok:#4fbfae; --ok-soft:#4fbfae1f;
-    --escape:#e0805f; --escape-soft:#e0805f1c;
-    --drop:#a09eb2;
-  }
-}
-:root[data-theme="dark"]{
-  --ground:#0c1013; --panel:#131a1f; --ink:#e7edef; --muted:#9aa8b0; --faint:#7d8b93;
-  --line:#26313a; --hair:#1c252c;
-  --ok:#4fbfae; --ok-soft:#4fbfae1f;
-  --escape:#e0805f; --escape-soft:#e0805f1c;
-  --drop:#a09eb2;
+  color-scheme:dark;
 }
 
-*{box-sizing:border-box}
-html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scrollbar-width:thin;scrollbar-color:#2c3b46 transparent}
 ::-webkit-scrollbar{width:12px;height:12px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:3px solid var(--ground);background-clip:padding-box}
-::-webkit-scrollbar-thumb:hover{background:var(--faint);background-clip:padding-box;border:3px solid var(--ground)}
+::-webkit-scrollbar-thumb{background:#2c3b46;border-radius:99px;border:3px solid var(--ground);background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#3d505d;background-clip:padding-box;border:3px solid var(--ground)}
 ::selection{background:var(--ok-soft);color:var(--ink)}
-*{-webkit-tap-highlight-color:transparent}
 
 body{
-  margin:0; background:var(--ground); color:var(--ink);
-  font:16px/1.65 var(--sans);
-  -webkit-font-smoothing:antialiased;
+  margin:0;background:var(--ground);color:var(--ink);
+  font:16px/1.62 var(--sans);-webkit-font-smoothing:antialiased;
 }
-.wrap{max-width:860px;margin:0 auto;padding-inline:20px}
+.wrap{max-width:1000px;margin:0 auto;padding-inline:22px}
+.col{max-width:63ch}
 
-a{color:inherit}
-a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--ok);outline-offset:4px;border-radius:3px}
+a{color:inherit;text-underline-offset:3px;text-decoration-color:var(--line)}
+a:hover{text-decoration-color:var(--ok)}
+:is(a,button,input,summary):focus-visible{outline:2px solid var(--ok);outline-offset:4px;border-radius:6px}
 
-.eyebrow{
-  font:500 11px/1 var(--mono); letter-spacing:.13em; text-transform:uppercase;
-  color:var(--faint); margin:0 0 18px;
-}
-h1{
-  font:300 clamp(42px,7.4vw,74px)/1.02 var(--display);
-  letter-spacing:-.022em; margin:0 0 22px; text-wrap:balance;
-}
-h1 em{font-style:italic;font-weight:400}
-h2{
-  font:400 clamp(26px,3.6vw,34px)/1.15 var(--display);
-  letter-spacing:-.015em; margin:0 0 18px; text-wrap:balance;
-}
-h3{font:600 14px/1.4 var(--sans);letter-spacing:-.005em;margin:0 0 8px}
-p{margin:0 0 17px;max-width:64ch}
-.lede{font-size:18px;color:var(--muted);max-width:60ch}
+h1{font:200 clamp(46px,8.4vw,92px)/1 var(--display);letter-spacing:-.028em;margin:0 0 26px;text-wrap:balance}
+h1 em{font-style:italic;font-weight:300}
+h2{font:300 clamp(28px,4vw,40px)/1.1 var(--display);letter-spacing:-.02em;margin:0 0 16px;text-wrap:balance}
+h3{font:600 14px/1.4 var(--sans);margin:0 0 7px}
+p{margin:0 0 16px}
+.lede{font-size:18px;color:var(--muted)}
 .muted{color:var(--muted)}
-strong{font-weight:600}
+.mono{font-family:var(--mono)}
+code{font:500 .88em/1.4 var(--mono);background:var(--raise);color:var(--ink);padding:2px 6px;border-radius:6px}
 
-/* ---------- portada ---------- */
-header.hero{padding-block:clamp(60px,11vh,104px) 46px;border-bottom:1px solid var(--hair)}
-.hero-claim{
-  font:400 19px/1.5 var(--display);color:var(--ink);max-width:54ch;margin:0 0 30px;
-}
-.hero-claim b{font-weight:500;font-style:italic}
+/* etiqueta de sección: numera porque el procedimiento sí es una secuencia */
+.marca{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.marca b{font:600 11px/1 var(--mono);letter-spacing:.16em;color:var(--faint)}
+.marca i{flex:1;height:1px;background:var(--hair)}
+.marca u{font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--faint);text-decoration:none}
 
-/* la ficha del escape: el dato que define la herramienta */
-.metric{
-  display:grid;grid-template-columns:auto 1fr;gap:0 20px;align-items:start;
-  background:var(--panel);border:1px solid var(--line);border-radius:12px;
-  padding:22px 24px;margin:34px 0 0;
-}
-.metric-n{
-  font:500 46px/1 var(--mono);color:var(--escape);letter-spacing:-.03em;
-  font-variant-numeric:tabular-nums;
-}
-.metric-body p{margin:0;font-size:14px;color:var(--muted);max-width:52ch}
-.metric-body h3{color:var(--ink)}
+section{padding-block:66px;border-top:1px solid var(--hair)}
 
-/* ---------- secciones ---------- */
-section{padding-block:56px;border-bottom:1px solid var(--hair)}
-section:last-of-type{border-bottom:0}
+/* ---------------- portada ---------------- */
+.hero{
+  padding-block:clamp(56px,10vh,96px) 66px;position:relative;overflow:hidden;
+}
+.hero:before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 88px),
+    radial-gradient(120% 90% at 78% 0%,#46c8a614,transparent 62%);
+  mask-image:linear-gradient(180deg,#000 0%,#0000 96%);
+}
+.hero>*{position:relative}
+.kicker{font:600 11px/1 var(--mono);letter-spacing:.17em;color:var(--ok);margin:0 0 20px}
+.claim{font:300 21px/1.48 var(--display);max-width:52ch;margin:0 0 24px;color:var(--ink)}
+.claim b{font-weight:400;font-style:italic}
 
-/* ---------- el caso ---------- */
-.caso{
-  border-left:2px solid var(--escape);padding:2px 0 2px 22px;margin:26px 0;
+.marcador{
+  display:flex;flex-wrap:wrap;align-items:center;gap:0 26px;
+  border:1px solid var(--line);border-radius:14px;background:var(--panel);
+  padding:18px 22px;margin:34px 0 26px;max-width:640px;
 }
-.caso p{margin-bottom:12px}
-.caso p:last-child{margin-bottom:0}
-.caso code{background:var(--escape-soft);color:var(--escape)}
+.marcador .n{font:600 44px/1 var(--mono);color:var(--escape);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.marcador div{min-width:min(100%,22ch);flex:1}
+.marcador p{margin:0;font-size:13.5px;color:var(--muted)}
 
-code{font:500 .87em/1.4 var(--mono);background:var(--hair);padding:2px 5px;border-radius:5px}
+.acciones{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.boton{
+  display:inline-flex;align-items:center;gap:9px;min-height:46px;padding:0 20px;
+  border-radius:10px;border:1px solid var(--ok);background:var(--ok);color:#06231c;
+  font:600 13.5px/1 var(--sans);text-decoration:none;cursor:pointer;
+  transition:filter .2s var(--ease);
+}
+.boton:hover{filter:brightness(1.1)}
+.boton.fantasma{background:none;color:var(--ink);border-color:var(--line)}
+.boton.fantasma:hover{border-color:var(--faint);filter:none}
 
-/* ---------- revisores ---------- */
-.ronda{margin-top:30px}
-.ronda-label{
-  display:flex;align-items:baseline;gap:12px;margin-bottom:14px;
-  font:500 11px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--faint);
+/* ---------------- banco de pruebas ---------------- */
+.banco{
+  border:1px solid var(--line);border-radius:14px;background:var(--panel);
+  overflow:hidden;margin-top:26px;
 }
-.ronda-label span{flex:1;height:1px;background:var(--hair)}
-.revisores{list-style:none;margin:0;padding:0;display:grid;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:10px;overflow:hidden}
-.revisores li{background:var(--panel);padding:13px 16px;display:grid;grid-template-columns:1fr;gap:3px}
-.revisores b{font-weight:600;font-size:14px}
-.revisores span{font-size:13.5px;color:var(--muted)}
-@media(min-width:620px){
-  .revisores li{grid-template-columns:minmax(0,15em) minmax(0,1fr);gap:0 20px;align-items:baseline}
+.banco-cab{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 18px;border-bottom:1px solid var(--hair);background:var(--sunken);
 }
+.banco-cab p{margin:0;font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--faint)}
+.modos{display:flex;gap:4px;background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:3px}
+.modos button{
+  font:500 11px/1 var(--mono);letter-spacing:.08em;color:var(--muted);
+  background:none;border:0;border-radius:6px;padding:8px 12px;min-height:34px;cursor:pointer;
+  transition:background .18s var(--ease),color .18s var(--ease);
+}
+.modos button[aria-pressed=true]{background:var(--raise);color:var(--ink)}
+.banco-cuerpo{padding:24px 18px 20px}
 
-/* ---------- ciclo de aprendizaje ---------- */
-.ciclo{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:14px}
-.ciclo li{
-  display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;
-  padding-bottom:14px;border-bottom:1px solid var(--hair);
+.formulario{max-width:46ch}
+.formulario>p{font-size:13px;color:var(--faint);margin:0 0 14px}
+.consent{display:grid;grid-template-columns:22px 1fr;gap:0 13px;align-items:start;font-size:13.5px;line-height:1.6;cursor:pointer}
+.consent:before{
+  content:'';width:22px;height:22px;margin-top:1px;border:1.5px solid var(--faint);border-radius:6px;
+  background:var(--ground) center/14px no-repeat;
+  transition:background-color .16s var(--ease),border-color .16s var(--ease);
 }
-.ciclo li:last-child{border-bottom:0;padding-bottom:0}
-.paso{
-  font:500 11px/1 var(--mono);color:var(--ok);background:var(--ok-soft);
-  padding:6px 8px;border-radius:5px;letter-spacing:.06em;white-space:nowrap;
+.consent:has(input:checked):before{
+  background-color:var(--ok);border-color:var(--ok);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2306231c' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7'/%3E%3C/svg%3E");
 }
-.ciclo p{margin:0;font-size:14.5px;color:var(--muted);max-width:56ch}
-.ciclo b{color:var(--ink);font-weight:600;display:block;font-size:14.5px;margin-bottom:2px}
+.consent:has(input:focus-visible):before{outline:2px solid var(--ok);outline-offset:3px}
+.consent input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.enlace{
+  font:inherit;color:var(--ok);background:none;border:0;padding:0;cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;
+}
+.aparte{margin:10px 0 0 35px}
 
-/* ---------- veredictos ---------- */
-.veredictos{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 0;padding:0;list-style:none}
-.veredictos li{
-  font:500 11px/1 var(--mono);letter-spacing:.08em;padding:7px 11px;border-radius:99px;
-  border:1px solid currentColor;
+.anuncio{margin-top:22px;padding-top:16px;border-top:1px solid var(--hair)}
+.anuncio-tit{margin:0 0 9px;font:600 10.5px/1 var(--mono);letter-spacing:.14em;color:var(--faint)}
+.anuncio-txt{
+  margin:0;font:500 13px/1.6 var(--mono);color:var(--ink);
+  background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:13px 15px;
 }
-.v-ok{color:var(--ok)}
-.v-plaus{color:var(--muted)}
-.v-drop{color:var(--drop)}
+.anuncio-txt .sobra{color:var(--escape);background:var(--escape-soft);border-radius:6px;padding:1px 4px}
+.refutacion{
+  margin-top:26px;border:1px solid var(--line);border-left:3px solid var(--drop);
+  border-radius:10px;background:var(--panel);padding:20px 22px;max-width:66ch;
+}
+.refutacion p{font-size:14px;color:var(--muted);margin:0 0 12px}
+.refutacion b{color:var(--ink);font-weight:600}
+.refu-sello{font:600 10.5px/1 var(--mono);letter-spacing:.13em;color:var(--drop);margin:0 0 14px}
+.refu-cierre{margin:0;color:var(--ink)}
+.veredicto{
+  margin:18px 0 0;font-size:13.5px;color:var(--muted);min-height:3.2em;
+  border-left:2px solid var(--line);padding-left:14px;
+}
+.veredicto[data-tono=malo]{border-left-color:var(--escape);color:var(--ink)}
+.veredicto[data-tono=bueno]{border-left-color:var(--ok)}
 
-/* ---------- cajones ---------- */
-.cajones{counter-reset:c;list-style:none;margin:24px 0 0;padding:0;display:grid;gap:12px}
-.cajones li{
-  background:var(--panel);border:1px solid var(--hair);border-left:3px solid var(--line);
-  border-radius:8px;padding:14px 17px;
+/* ---------------- revisores ---------------- */
+.ronda-tit{display:flex;align-items:baseline;gap:12px;margin:26px 0 12px;font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--faint)}
+.ronda-tit i{flex:1;height:1px;background:var(--hair)}
+.chips{list-style:none;margin:0;padding:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(224px,1fr))}
+.chips li{
+  border:1px solid var(--hair);border-radius:10px;background:var(--panel);padding:12px 14px;
+  transition:border-color .45s var(--ease),background-color .45s var(--ease);
 }
-.cajones li:first-child{border-left-color:var(--escape)}
+.chips li.viva{border-color:var(--ok);background:var(--ok-soft)}
+.chips b{display:block;font-size:13.5px;font-weight:600;margin-bottom:2px}
+.chips span{display:block;font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* ---------------- veredictos ---------------- */
+.sellos{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0 0;padding:0;list-style:none}
+.sellos li{font:600 11px/1 var(--mono);letter-spacing:.09em;padding:9px 13px;border-radius:99px;border:1px solid currentColor}
+.s-ok{color:var(--ok)}.s-pl{color:var(--muted)}.s-dr{color:var(--drop)}
+
+/* ---------------- bucle ---------------- */
+.bucle{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:0}
+.bucle li{display:grid;grid-template-columns:auto 1fr;gap:18px;padding:15px 0;border-bottom:1px solid var(--hair)}
+.bucle li:last-child{border-bottom:0}
+.paso{font:600 10.5px/1 var(--mono);letter-spacing:.1em;color:var(--ok);background:var(--ok-soft);border-radius:6px;padding:7px 9px;height:max-content;white-space:nowrap}
+.bucle b{display:block;font-size:14px;margin-bottom:3px}
+.bucle p{margin:0;font-size:13.5px;color:var(--muted);max-width:58ch}
+
+.consola{
+  background:var(--sunken);border:1px solid var(--line);border-radius:10px;
+  padding:15px 17px;overflow-x:auto;margin:20px 0;
+}
+.consola pre{margin:0;font:500 12.5px/1.8 var(--mono);color:var(--ink)}
+.consola .c{color:var(--faint)}
+.consola .g{color:var(--ok)}
+
+/* ---------------- cajones ---------------- */
+.cajones{list-style:none;counter-reset:c;margin:22px 0 0;padding:0;display:grid;gap:9px}
+.cajones li{background:var(--panel);border:1px solid var(--hair);border-left:3px solid var(--line);border-radius:10px;padding:14px 17px}
+.cajones li:nth-child(1){border-left-color:var(--escape)}
 .cajones li:nth-child(2){border-left-color:var(--ok)}
-.cajones b{display:block;font-size:14.5px;margin-bottom:3px}
+.cajones b{display:block;font-size:14px;margin-bottom:2px}
 .cajones p{margin:0;font-size:13.5px;color:var(--muted)}
 
-/* ---------- instalación ---------- */
-.shell{
-  background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  padding:16px 18px;overflow-x:auto;margin:20px 0;
+/* ---------------- autoauditoría ---------------- */
+.auditoria{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;margin-top:24px}
+.tabla{width:100%;border-collapse:collapse;font-size:13.5px}
+.tabla th{
+  text-align:left;font:600 10.5px/1 var(--mono);letter-spacing:.13em;color:var(--faint);
+  padding:13px 18px;background:var(--sunken);border-bottom:1px solid var(--hair);
 }
-.shell pre{margin:0;font:500 13px/1.75 var(--mono);color:var(--ink)}
-.shell .c{color:var(--faint)}
-.copiar{
-  font:500 12px/1 var(--mono);letter-spacing:.06em;color:var(--muted);
-  background:none;border:1px solid var(--line);border-radius:6px;
-  padding:9px 12px;cursor:pointer;min-height:36px;
-  transition:color .2s var(--ease),border-color .2s var(--ease);
-}
-.copiar:hover{color:var(--ink);border-color:var(--faint)}
-.pedido{
-  font:400 17px/1.5 var(--display);font-style:italic;color:var(--ink);
-  border-left:2px solid var(--ok);padding-left:18px;margin:24px 0;
-}
+.tabla td{padding:12px 18px;border-bottom:1px solid var(--hair);vertical-align:top}
+.tabla tr:last-child td{border-bottom:0}
+.tabla td:last-child{font:500 12.5px/1.4 var(--mono);color:var(--ok);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tabla td.falla{color:var(--escape)}
+.nota{padding:13px 18px;font-size:12.5px;color:var(--faint);background:var(--sunken);border-top:1px solid var(--hair);margin:0}
 
-/* ---------- autoauditoría, el guiño ---------- */
-.auto{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px;margin-top:30px}
-.auto>p{font-size:14px}
-.auto ul{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:9px}
-.auto li{display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:baseline;font-size:13.5px;color:var(--muted)}
-.tic{color:var(--ok);font:500 12px/1.4 var(--mono)}
+/* ---------------- instalación ---------------- */
+.pedido{font:300 20px/1.45 var(--display);font-style:italic;border-left:2px solid var(--ok);padding-left:18px;margin:22px 0}
 
-/* ---------- pie ---------- */
-footer{padding-block:40px 56px;font-size:13.5px;color:var(--faint)}
-footer a{color:var(--muted);text-decoration-color:var(--line);text-underline-offset:3px}
-footer a:hover{color:var(--ink)}
-.pie-links{display:flex;flex-wrap:wrap;gap:8px 22px;margin-bottom:14px}
+/* ---------------- cierre y pie ---------------- */
+.cierre{font:200 clamp(28px,4.6vw,46px)/1.12 var(--display);letter-spacing:-.022em;max-width:20ch;margin:0}
+.cierre em{font-style:italic;font-weight:300;color:var(--ok)}
+footer{padding-block:40px 60px;border-top:1px solid var(--hair);font-size:13px;color:var(--faint)}
+.pie{display:flex;flex-wrap:wrap;gap:8px 24px;margin-bottom:14px}
 
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media(max-width:560px){
+  .marcador{gap:14px}
+  .bucle li{grid-template-columns:1fr;gap:9px}
+  .paso{justify-self:start}
 }
 </style>
 
 <div class="wrap">
 
 <header class="hero">
-  <p class="eyebrow">Skill para Claude Code</p>
+  <p class="kicker">SKILL PARA CLAUDE CODE</p>
   <h1>Revisión <em>impecable</em></h1>
-  <p class="hero-claim">Revisa una web antes de que la vea el cliente. Once revisores en paralelo, cada hallazgo tiene que sobrevivir a un intento de refutarlo, y al final <b>la skill se corrige con lo que se le escapó</b>.</p>
-  <p class="lede">No es un linter ni una lista de buenas prácticas. Es un procedimiento que mide su propio fracaso y reescribe sus propias instrucciones. La skill que usás en el proyecto diez no es la que instalaste.</p>
+  <p class="claim">Revisa una web antes de que la vea el cliente. Once revisores en paralelo, cada hallazgo tiene que sobrevivir a un intento de refutarlo, y al final <b>la skill se corrige con lo que se le escapó</b>.</p>
 
-  <div class="metric">
-    <div class="metric-n">1</div>
-    <div class="metric-body">
+  <div class="marcador">
+    <span class="n">1</span>
+    <div>
       <h3>escape en la primera corrida</h3>
-      <p>Un escape es un defecto que alguien encontró <em>después</em> de que la revisión dijo "listo". Es la única nota que importa, y la skill la lee sola del historial de git.</p>
+      <p>Un defecto que alguien encontró <em>después</em> de que la revisión dijo "listo". Es la única nota que cuenta, y la skill la lee sola del historial de git.</p>
     </div>
+  </div>
+
+  <div class="acciones">
+    <a class="boton" href="#instalar">Instalar</a>
+    <a class="boton fantasma" href="https://github.com/migueedlsantos97/revision-impecable">Ver el código</a>
   </div>
 </header>
 
 <section>
-  <h2>Por qué en paralelo y no en lista</h2>
-  <p>Un revisor solo, por atento que sea, arrastra sus puntos ciegos: da por bueno lo que él mismo decidió hace dos horas.</p>
+  <div class="marca"><b>01</b><i></i><u>BANCO DE PRUEBAS</u></div>
+  <h2 class="col">Un defecto que mirás sin ver</h2>
+  <p class="lede col">Este es el formulario de un sitio que yo ya había revisado, con cuidado, dos veces. Marcá la casilla y leé abajo lo que anuncia un lector de pantalla.</p>
 
-  <div class="caso">
-    <p>En el proyecto donde nació esta skill yo había recorrido el formulario entero, con cuidado, dos veces. Un revisor de accesibilidad despachado aparte encontró que el botón <code>Cómo usamos tus datos</code> vivía dentro del <code>&lt;label&gt;</code> de la casilla de consentimiento.</p>
-    <p>Abrirlo marcaba o desmarcaba el consentimiento sin que se viera, en el único campo con peso legal del formulario. Lo había mirado y no lo vi.</p>
+  <div class="banco">
+    <div class="banco-cab">
+      <p>CONSENTIMIENTO · CAMPO CON PESO LEGAL</p>
+      <div class="modos" role="group" aria-label="Estado del formulario">
+        <button type="button" id="modo-roto" aria-pressed="true">SIN REVISAR</button>
+        <button type="button" id="modo-ok" aria-pressed="false">REVISADO</button>
+      </div>
+    </div>
+
+    <div class="banco-cuerpo">
+      <div class="formulario">
+        <p>Paso 4 · Lo charlamos con la dueña</p>
+
+        <div id="version-rota">
+          <label class="consent" id="label-roto"><input type="checkbox" id="check-roto"><span>Acepto que reciban estos datos para responder mi consulta. <button type="button" class="enlace" id="link-roto">Cómo usamos tus datos</button></span></label>
+        </div>
+
+        <div id="version-sana" hidden>
+          <label class="consent" id="label-sano"><input type="checkbox" id="check-sano"><span>Acepto que reciban estos datos para responder mi consulta.</span></label>
+          <p class="aparte"><button type="button" class="enlace" id="link-sano">Cómo usamos tus datos</button></p>
+        </div>
+      </div>
+
+      <div class="anuncio">
+        <p class="anuncio-tit">LO QUE ANUNCIA EL LECTOR DE PANTALLA</p>
+        <p class="anuncio-txt" id="anuncio" role="status"></p>
+      </div>
+
+      <p class="veredicto" id="veredicto">El botón está dentro del <code>&lt;label&gt;</code>, así que su texto se pega al nombre de la casilla. Quien no ve la pantalla escucha las dos cosas como una sola.</p>
+    </div>
   </div>
 
-  <p>Y al revés: más revisores sin refutación son más ruido. En la misma sesión una sospecha de vulnerabilidad resultó falsa al probarla contra producción. Por eso ningún hallazgo se arregla por venir de un revisor: primero hay que intentar demostrar que está mal.</p>
+  <div class="refutacion">
+    <p class="refu-sello">DESCARTADO AL REFUTARLO</p>
+    <p>El revisor que encontró esto dijo además que activar el botón <b>marcaba o desmarcaba la casilla</b>, porque estaba dentro del label. Sonaba grave y era verosímil. Lo di por bueno y lo reporté así.</p>
+    <p>Es falso. El navegador no dispara el label cuando el clic cae en un descendiente interactivo, y un <code>&lt;button&gt;</code> lo es. Lo probé recién, en esta página, y la casilla no se mueve.</p>
+    <p class="refu-cierre">Por eso ningún hallazgo se acepta por venir de un revisor. Este error mío es el mejor argumento que tengo para el paso que lo habría atajado.</p>
+  </div>
 
-  <ul class="veredictos">
-    <li class="v-ok">CONFIRMADO · lo reprodujiste</li>
-    <li class="v-plaus">PLAUSIBLE · no se arregla a ciegas</li>
-    <li class="v-drop">DESCARTADO · queda escrito por qué</li>
+  <p class="muted col" style="margin-top:22px">El defecto que sí quedó lo encontró un revisor despachado aparte, mientras yo daba el formulario por bueno. Esa es toda la tesis: un revisor solo da por bueno lo que él mismo decidió hace dos horas.</p>
+</section>
+
+<section>
+  <div class="marca"><b>02</b><i></i><u>DESPACHO</u></div>
+  <h2 class="col">Once encargos estrechos, a la vez</h2>
+  <p class="lede col">Ninguno ve lo que encontraron los otros. Van en dos rondas porque la segunda necesita el sitio corriendo.</p>
+
+  <p class="ronda-tit">RONDA A · SOBRE EL CÓDIGO <i></i></p>
+  <ul class="chips" id="ronda-a">
+    <li><b>Consistencia visual</b><span>quince valores donde debería haber cinco</span></li>
+    <li><b>Controles del sistema</b><span>lo que dibuja el navegador y no la marca</span></li>
+    <li><b>Contraste y color</b><span>razones calculadas, no miradas</span></li>
+    <li><b>Teclado y lectores</b><span>lo que no se puede hacer sin mouse</span></li>
+    <li><b>Textos y nomenclatura</b><span>dos nombres para la misma cosa</span></li>
+    <li><b>Compatibilidad y Safari</b><span>lo que rompe fuera de Chromium</span></li>
+  </ul>
+
+  <p class="ronda-tit">RONDA B · SOBRE EL SITIO ANDANDO <i></i></p>
+  <ul class="chips" id="ronda-b">
+    <li><b>Anchos y reflujo</b><span>el hueco entre breakpoints, no el móvil</span></li>
+    <li><b>Estados límite</b><span>vacío, cargando, caído, desbordado</span></li>
+    <li><b>Rendimiento</b><span>peso, primer dibujo, gama baja</span></li>
+    <li><b>Conversión y compartido</b><span>qué ve quien llega y quien recibe el link</span></li>
+    <li><b>Dirección de arte</b><span>las imágenes como conjunto</span></li>
+  </ul>
+
+  <h2 class="col" style="margin-top:46px">Y nada se acepta por venir de un revisor</h2>
+  <p class="col muted">Once revisores sin refutación son once veces más ruido. Una sospecha de vulnerabilidad de esa misma corrida resultó falsa al probarla contra producción.</p>
+  <ul class="sellos">
+    <li class="s-ok">CONFIRMADO · lo reprodujiste</li>
+    <li class="s-pl">PLAUSIBLE · no se arregla a ciegas</li>
+    <li class="s-dr">DESCARTADO · queda escrito por qué</li>
   </ul>
 </section>
 
 <section>
-  <h2>Los once revisores</h2>
-  <p class="muted">Cada uno recibe un encargo estrecho y no ve lo que encontraron los otros. Van en dos rondas porque la segunda necesita el sitio corriendo.</p>
+  <div class="marca"><b>03</b><i></i><u>APRENDIZAJE</u></div>
+  <h2 class="col">Mide su propio fracaso</h2>
+  <p class="lede col">No cuenta hallazgos: cuenta escapes. Cada corrida arranca buscándolos en el historial, sin que nadie se los reporte.</p>
 
-  <div class="ronda">
-    <p class="ronda-label">Ronda A · sobre el código <span></span></p>
-    <ul class="revisores">
-      <li><b>Consistencia visual</b><span>quince valores donde debería haber cinco</span></li>
-      <li><b>Controles del sistema</b><span>lo que dibuja el navegador y no la marca</span></li>
-      <li><b>Contraste y color</b><span>razones calculadas, no miradas</span></li>
-      <li><b>Teclado y lectores</b><span>lo que no se puede hacer sin mouse</span></li>
-      <li><b>Textos y nomenclatura</b><span>dos nombres para la misma cosa</span></li>
-      <li><b>Compatibilidad y Safari</b><span>lo que rompe fuera de Chromium</span></li>
-    </ul>
-  </div>
+  <div class="consola"><pre><span class="g">git</span> log --oneline --since=<span class="c">"&lt;fecha de la revisión anterior&gt;"</span> -- &lt;rutas que cubrió&gt;</pre></div>
+  <p class="col muted">Todo commit posterior que arregle algo que la revisión debió cazar es un escape. Con eso en la mano, el último paso responde cinco preguntas y <strong>aplica los cambios, no los propone</strong>.</p>
 
-  <div class="ronda">
-    <p class="ronda-label">Ronda B · sobre el sitio andando <span></span></p>
-    <ul class="revisores">
-      <li><b>Anchos y reflujo</b><span>el hueco entre breakpoints, no el móvil</span></li>
-      <li><b>Estados límite</b><span>vacío, cargando, caído, desbordado</span></li>
-      <li><b>Rendimiento</b><span>peso, primer dibujo, gama baja</span></li>
-      <li><b>Conversión y compartido</b><span>qué ve quien llega y quien recibe el link</span></li>
-      <li><b>Dirección de arte</b><span>las imágenes como conjunto</span></li>
-    </ul>
-  </div>
-</section>
-
-<section>
-  <h2>Cómo aprende</h2>
-  <p>La medida de si la skill sirve no es cuántos hallazgos trajo. Es cuántos escapes hubo. Cada corrida empieza buscándolos en el historial, sin que nadie se los reporte:</p>
-
-  <div class="shell"><pre>git log --oneline --since=<span class="c">"&lt;fecha de la revisión anterior&gt;"</span> -- &lt;rutas que cubrió&gt;</pre></div>
-
-  <p>Todo commit posterior que arregle algo que la revisión debió cazar es un escape. Con eso en la mano, el último paso responde cinco preguntas y <strong>aplica los cambios, no los propone</strong>.</p>
-
-  <ul class="ciclo">
-    <li><span class="paso">ESCAPE</span><div><b>Qué encargo debió cazarlo</b><p>Y qué línea exacta lo caza ahora. Se escribe en el encargo, con la marca <code>[caso real]</code>: esa línea existe porque una vez se pagó por no tenerla.</p></div></li>
+  <ul class="bucle">
+    <li><span class="paso">ESCAPE</span><div><b>Qué encargo debió cazarlo</b><p>Y qué línea exacta lo caza ahora. Entra al encargo con la marca <code>[caso real]</code>: esa línea existe porque una vez se pagó por no tenerla.</p></div></li>
     <li><span class="paso">RUIDO</span><div><b>Qué encargo indujo un falso positivo</b><p>Un check redactado como sospecha genera ruido. Uno redactado como prueba, no. Se reescribe.</p></div></li>
     <li><span class="paso">PODA</span><div><b>Qué check lleva tres corridas sin disparar</b><p>Se borra, con constancia. Un documento que solo suma termina en tres mil líneas que nadie ejecuta.</p></div></li>
     <li><span class="paso">TÉCNICA</span><div><b>Qué hubo que improvisar</b><p>Un comando, una fórmula, una trampa del entorno. Si se necesitó una vez, se va a necesitar otra.</p></div></li>
@@ -272,79 +343,232 @@ footer a:hover{color:var(--ink)}
 </section>
 
 <section>
-  <h2>Ordenar por lo que cuesta</h2>
-  <p>Ochenta hallazgos sin orden se convierten en un píxel corregido mientras la vista previa de WhatsApp sigue rota.</p>
+  <div class="marca"><b>04</b><i></i><u>TRIAJE</u></div>
+  <h2 class="col">Ordenar por lo que cuesta</h2>
+  <p class="lede col">Ochenta hallazgos sin orden se vuelven un píxel corregido mientras la vista previa de WhatsApp sigue rota.</p>
   <ol class="cajones">
     <li><b>Le cuesta la venta</b><p>No funciona, no se entiende, no se puede usar, o se ve mal donde el cliente lo va a mostrar. Se arregla todo.</p></li>
-    <li><b>Parece de principiante</b><p>Funciona, pero delata falta de oficio: controles de fábrica, valores casi iguales, textos con dos nombres. Se arregla todo, y es lo que más define la impresión.</p></li>
+    <li><b>Parece de principiante</b><p>Funciona, pero delata falta de oficio: controles de fábrica, valores casi iguales, textos con dos nombres. Es lo que más define la impresión.</p></li>
     <li><b>No lo nota nadie</b><p>Se arregla si sale barato. Si no, va al informe.</p></li>
   </ol>
-  <p style="margin-top:20px" class="muted">Las decisiones de gusto no entran en ningún cajón. Se reportan con el motivo y se dejan como están: la web es de quien la encargó.</p>
+  <p class="muted col" style="margin-top:18px">Las decisiones de gusto no entran en ningún cajón. Se reportan con el motivo y se dejan como están: la web es de quien la encargó.</p>
 </section>
 
 <section>
-  <h2>Qué entrega</h2>
-  <p>Un informe en markdown pensado para entenderse solo. Quien lo abra dentro de seis meses, sin haber estado en la sesión, tiene que saber qué se revisó y qué se decidió dejar.</p>
-  <p>Separa cuatro cosas que normalmente se mezclan: lo que se arregló, lo que se descartó y por qué, lo que quedó a criterio del cliente, y <strong>dónde el procedimiento sigue siendo ciego</strong>. Esa última sección es la más honesta, y la que hace mejor a la próxima revisión.</p>
+  <div class="marca"><b>05</b><i></i><u>AUTOAUDITORÍA</u></div>
+  <h2 class="col">Esta página se revisa a sí misma</h2>
+  <p class="lede col">Sería raro promocionar un control de calidad desde una página con los controles de fábrica puestos. Los números de abajo se calculan ahora, en tu navegador, sobre esta misma página.</p>
 
-  <div class="auto">
-    <h3>Esta página pasó su propia revisión</h3>
-    <p>Sería raro promocionar un control de calidad desde una página con los controles de fábrica puestos. Los que reemplazó:</p>
-    <ul>
-      <li><span class="tic">✓</span><span>Barra de desplazamiento en la paleta, no el gris de sistema de 17px</span></li>
-      <li><span class="tic">✓</span><span>Sin el rectángulo azul que Android pinta sobre lo que tocás</span></li>
-      <li><span class="tic">✓</span><span>Anillo de foco propio, visible, separado del relleno del control</span></li>
-      <li><span class="tic">✓</span><span>Selección de texto en el color de la marca</span></li>
-      <li><span class="tic">✓</span><span>Los dos temas definidos por tokens, incluido el estado sin estampar</span></li>
-      <li><span class="tic">✓</span><span>Todo visible en reposo: nada espera a un observador para aparecer</span></li>
-      <li><span class="tic">✓</span><span>Sin desborde horizontal a 360px, y respeta <code>prefers-reduced-motion</code></span></li>
-    </ul>
+  <div class="auditoria">
+    <table class="tabla">
+      <thead><tr><th scope="col">COMPROBACIÓN</th><th scope="col">MEDIDA</th></tr></thead>
+      <tbody id="auditoria-filas">
+        <tr><td class="muted">Calculando…</td><td></td></tr>
+      </tbody>
+    </table>
+    <p class="nota" id="auditoria-nota">Se miden contrastes reales con la fórmula de luminancia de WCAG, se cuentan los radios declarados en la hoja de esta página y se comprueba el desborde al ancho actual.</p>
   </div>
 </section>
 
 <section>
-  <h2>Instalación</h2>
-  <p>Copiá la carpeta <code>skill/</code> a tus skills de Claude Code. Se carga en la sesión siguiente.</p>
+  <div class="marca"><b>06</b><i></i><u>ENTREGA</u></div>
+  <h2 class="col">Un informe que se entiende solo</h2>
+  <p class="lede col">Quien lo abra dentro de seis meses, sin haber estado en la sesión, tiene que saber qué se revisó y qué se decidió dejar.</p>
+  <p class="col">Separa cuatro cosas que normalmente se mezclan: lo arreglado, lo descartado y por qué, lo que quedó a criterio del cliente, y <strong>dónde el procedimiento sigue siendo ciego</strong>. Esa última sección es la más honesta y la que hace mejor a la próxima revisión.</p>
+  <div class="acciones" style="margin-top:22px">
+    <a class="boton fantasma" href="https://github.com/migueedlsantos97/revision-impecable/blob/main/ejemplos/informe-ejemplo.md">Leer un informe real</a>
+  </div>
+</section>
 
-  <div class="shell"><pre id="cmd"><span class="c"># para todos tus proyectos</span>
-cp -r skill ~/.claude/skills/revision-impecable
+<section id="instalar">
+  <div class="marca"><b>07</b><i></i><u>INSTALACIÓN</u></div>
+  <h2 class="col">Dos líneas</h2>
+  <p class="lede col">Copiá la carpeta <code>skill/</code> a tus skills de Claude Code. Se carga en la sesión siguiente.</p>
 
-<span class="c"># solo para este proyecto</span>
-cp -r skill .claude/skills/revision-impecable</pre></div>
-  <button class="copiar" type="button" id="copiar" data-cmd="cp -r skill ~/.claude/skills/revision-impecable">COPIAR COMANDO</button>
+  <div class="consola"><pre><span class="c"># para todos tus proyectos</span>
+git clone https://github.com/migueedlsantos97/revision-impecable
+cp -r revision-impecable/skill ~/.claude/skills/revision-impecable</pre></div>
+  <button class="boton fantasma" type="button" id="copiar" data-cmd="git clone https://github.com/migueedlsantos97/revision-impecable && cp -r revision-impecable/skill ~/.claude/skills/revision-impecable">Copiar</button>
 
-  <p style="margin-top:26px">Después alcanza con pedirlo con tus palabras:</p>
+  <p style="margin-top:28px" class="col">Después alcanza con pedirlo con tus palabras:</p>
   <p class="pedido">revisá todo antes de mostrárselo al cliente</p>
-  <p class="muted">O invocarla por nombre: <code>/revision-impecable</code>.</p>
 </section>
 
 <section>
-  <h2>La regla de fondo</h2>
-  <p class="lede" style="font-size:20px;color:var(--ink);font-family:var(--display);font-weight:300;line-height:1.45">No se termina cuando funciona. Se termina cuando nada parece accidental.</p>
-  <p style="margin-top:18px">Un valor que no se eligió, un control que dibujó el sistema operativo, dos cosas parecidas que no son iguales: cada uno es una novatada que un cliente nota sin saber nombrarla.</p>
+  <p class="cierre">No se termina cuando funciona. Se termina cuando nada parece <em>accidental</em>.</p>
+  <p class="muted col" style="margin-top:24px">Un valor que no se eligió, un control que dibujó el sistema operativo, dos cosas parecidas que no son iguales: cada uno es una novatada que un cliente nota sin saber nombrarla.</p>
 </section>
 
 <footer>
-  <div class="pie-links">
+  <nav class="pie" aria-label="Enlaces del proyecto">
     <a href="https://github.com/migueedlsantos97/revision-impecable">Repositorio</a>
     <a href="https://github.com/migueedlsantos97/revision-impecable/blob/main/ejemplos/informe-ejemplo.md">Informe de ejemplo</a>
     <a href="https://github.com/migueedlsantos97/revision-impecable/blob/main/skill/references/encargos.md">Los once encargos</a>
-  </div>
-  <p style="margin:0">Licencia MIT. Escrita en español, que es el idioma en el que revisa.</p>
+  </nav>
+  <p style="margin:0">Licencia MIT · Miguel de los Santos · Escrita en español, que es el idioma en el que revisa.</p>
 </footer>
 
 </div>
 
 <script>
-document.getElementById('copiar').addEventListener('click', async (event) => {
-  const boton = event.currentTarget;
-  try {
-    await navigator.clipboard.writeText(boton.dataset.cmd);
-    boton.textContent = 'COPIADO';
-  } catch {
-    // El portapapeles puede estar bloqueado: mejor decir la verdad que fingir.
-    boton.textContent = 'COPIALO A MANO';
+const $ = (id) => document.getElementById(id);
+const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---- banco de pruebas ------------------------------------------------- */
+// El nombre accesible de un control envuelto en <label> es el texto del label,
+// con los espacios colapsados. Acá se arma igual y se resalta lo que sobra.
+let roto = true;
+
+function anunciar() {
+  const caja = document.getElementById(roto ? 'anuncio' : 'anuncio');
+  const check = document.getElementById(roto ? 'check-roto' : 'check-sano');
+  const label = document.getElementById(roto ? 'label-roto' : 'label-sano');
+  const estado = check.checked ? 'marcada' : 'sin marcar';
+  const propio = 'Acepto que reciban estos datos para responder mi consulta.';
+  const total = label.textContent.replace(/\s+/g, ' ').trim();
+  const sobra = total.slice(propio.length).trim();
+
+  caja.replaceChildren();
+  caja.append(document.createTextNode('Casilla, ' + estado + '. ' + propio));
+  if (sobra) {
+    caja.append(document.createTextNode(' '));
+    const marca = document.createElement('span');
+    marca.className = 'sobra';
+    marca.textContent = sobra;
+    caja.append(marca);
   }
-  setTimeout(() => { boton.textContent = 'COPIAR COMANDO'; }, 2200);
+}
+
+function decir(texto, tono) {
+  const v = document.getElementById('veredicto');
+  v.dataset.tono = tono || '';
+  v.textContent = texto;
+}
+
+document.getElementById('check-roto').addEventListener('change', () => {
+  anunciar();
+  decir('El texto del botón se pegó al nombre de la casilla. Quien navega a ciegas escucha "responder mi consulta cómo usamos tus datos" como una sola frase, y no sabe que hay un botón ahí.', 'malo');
+});
+document.getElementById('check-sano').addEventListener('change', () => {
+  anunciar();
+  decir('El botón salió del label. La casilla se anuncia con su propia frase y el botón queda aparte, como el control separado que es.', 'bueno');
+});
+document.getElementById('link-roto').addEventListener('click', () => {
+  decir('Abre el diálogo de privacidad. La casilla no se mueve: el navegador no dispara el label para un descendiente interactivo. Eso es justo lo que el revisor dijo mal y la refutación descartó.', '');
+});
+document.getElementById('link-sano').addEventListener('click', () => {
+  decir('Abre el diálogo de privacidad, sin tocar nada más.', 'bueno');
+});
+
+function modo(rotoNuevo) {
+  roto = rotoNuevo;
+  document.getElementById('modo-roto').setAttribute('aria-pressed', String(roto));
+  document.getElementById('modo-ok').setAttribute('aria-pressed', String(!roto));
+  document.getElementById('version-rota').hidden = !roto;
+  document.getElementById('version-sana').hidden = roto;
+  document.getElementById('check-roto').checked = false;
+  document.getElementById('check-sano').checked = false;
+  anunciar();
+  decir(roto
+    ? 'El botón está dentro del <label>, así que su texto se pega al nombre de la casilla. Marcala y leé el anuncio.'
+    : 'Ahora el botón es hermano del label, no hijo. Marcá la casilla y comparé el anuncio con el de antes.',
+    roto ? '' : 'bueno');
+}
+document.getElementById('modo-roto').addEventListener('click', () => modo(true));
+document.getElementById('modo-ok').addEventListener('click', () => modo(false));
+anunciar();
+
+/* ---- despacho: se encienden a la vez, no uno por uno ------------------ */
+if (!quieto) {
+  const encender = (lista, base) => {
+    [...lista.children].forEach((li, i) => {
+      setTimeout(() => {
+        li.classList.add('viva');
+        setTimeout(() => li.classList.remove('viva'), 900);
+      }, base + i * 45);
+    });
+  };
+  const obs = new IntersectionObserver((entradas) => {
+    for (const e of entradas) {
+      if (!e.isIntersecting) continue;
+      obs.unobserve(e.target);
+      encender(e.target, e.target.id === 'ronda-b' ? 260 : 0);
+    }
+  }, { threshold: 0.25 });
+  obs.observe($('ronda-a'));
+  obs.observe($('ronda-b'));
+}
+
+/* ---- autoauditoría: números reales de esta misma página --------------- */
+function aLineal(c) { return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function luminancia(hex) {
+  const m = hex.trim().match(/^#?([0-9a-f]{6})$/i);
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => aLineal(v / 255));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function razon(a, b) {
+  const [la, lb] = [luminancia(a), luminancia(b)];
+  if (la === null || lb === null) return null;
+  const [hi, lo] = la > lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+const token = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function auditar() {
+  const filas = [];
+  const add = (que, medida, pasa) => filas.push({ que, medida, pasa });
+
+  const cuerpo = razon(token('--muted'), token('--ground'));
+  const titulo = razon(token('--ink'), token('--ground'));
+  add('Contraste del texto de apoyo sobre el fondo', cuerpo.toFixed(2) + ':1', cuerpo >= 4.5);
+  add('Contraste del texto principal sobre el fondo', titulo.toFixed(2) + ':1', titulo >= 4.5);
+
+  // Radios declarados en la hoja propia. La de Google Fonts es de otro origen
+  // y lanza al leer cssRules, por eso el try.
+  const radios = new Set();
+  for (const hoja of document.styleSheets) {
+    let reglas;
+    try { reglas = hoja.cssRules; } catch { continue; }
+    for (const r of reglas) {
+      const v = r.style && r.style.borderRadius;
+      if (v && !v.includes('99px') && !v.includes('50%')) radios.add(v);
+    }
+  }
+  add('Radios distintos declarados en esta página', radios.size + (radios.size === 1 ? ' valor' : ' valores'), radios.size <= 6);
+
+  const desborde = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+  add('Desborde horizontal al ancho actual (' + innerWidth + 'px)', desborde <= 1 ? 'ninguno' : desborde + 'px', desborde <= 1);
+
+  const raiz = getComputedStyle(document.documentElement);
+  add('Barra de desplazamiento propia', raiz.scrollbarColor && raiz.scrollbarColor !== 'auto' ? 'en la paleta' : 'de fábrica', raiz.scrollbarColor !== 'auto');
+
+  const tap = getComputedStyle(document.body).webkitTapHighlightColor || '';
+  add('Resaltado táctil de Android', /rgba\(0, 0, 0, 0\)|transparent/.test(tap) ? 'desactivado' : 'de fábrica', /rgba\(0, 0, 0, 0\)|transparent/.test(tap));
+
+  add('Efectos', quieto ? 'apagados, como pediste' : 'activos', true);
+
+  const cuerpoTabla = $('auditoria-filas');
+  cuerpoTabla.replaceChildren(...filas.map(({ que, medida, pasa }) => {
+    const tr = document.createElement('tr');
+    const td1 = document.createElement('td');
+    td1.textContent = que;
+    const td2 = document.createElement('td');
+    td2.textContent = (pasa ? '✓  ' : '✗  ') + medida;
+    if (!pasa) td2.className = 'falla';
+    tr.append(td1, td2);
+    return tr;
+  }));
+}
+auditar();
+addEventListener('resize', () => { clearTimeout(auditar.t); auditar.t = setTimeout(auditar, 250); });
+
+/* ---- copiar ----------------------------------------------------------- */
+$('copiar').addEventListener('click', async (e) => {
+  const b = e.currentTarget;
+  try { await navigator.clipboard.writeText(b.dataset.cmd); b.textContent = 'Copiado'; }
+  catch { b.textContent = 'Copialo a mano'; }
+  setTimeout(() => { b.textContent = 'Copiar'; }, 2200);
 });
 </script>
