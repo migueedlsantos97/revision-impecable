@@ -183,6 +183,39 @@ mismo archivo salen concatenados en una sola cabecera contradictoria, del tipo
 `max-age=2592000, max-age=31536000, immutable`. Se comprueba con
 `curl -sI <url> | grep -i cache-control`.
 
+## Un test puede estar muerto en vez de en rojo
+
+**[caso real]** Un `\b` de un regex quedo escrito como un caracter de retroceso
+real (0x08) al generar el archivo. El regex seguia siendo valido y el test
+seguia pasando, pero **no podia matchear nunca**: comprobaba cero. Un test que
+pasa por una razon equivocada es peor que no tenerlo, porque ocupa el lugar de
+uno que funcionaria.
+
+Dos revisiones baratas cuando se escriben tests desde un script:
+
+```bash
+# Caracteres de control que no deberian estar en codigo
+grep -Panc '[\x07\x08\x0b\x0c\x1b]' tests/*.mjs dist/*.js src/*.js
+```
+
+Y **romper a proposito lo que el test dice comprobar**: si el test sigue en
+verde, el test no comprueba eso. Vale sobre todo para los `doesNotMatch` y los
+`assert.ok`, que pasan por ausencia.
+
+## Los comentarios no son codigo
+
+**[caso real, dos veces]** Un comentario que explica *por que no* se usa algo
+nombra ese algo, asi que una comprobacion sobre el archivo entero lo encuentra y
+falla. Paso con `Intl` y con `button:focus-visible`: el comentario que explicaba
+la regla hacia fallar la regla.
+
+Antes de comprobar la ausencia de un patron, sacar los comentarios:
+
+```js
+const codigo = js.replace(/^\s*\/\/.*$/gm, '');          // JS
+const reglas = css.replace(/\/\*[\s\S]*?\*\//g, '');     // CSS
+```
+
 ## `:focus` no existe si la ventana no tiene foco
 
 **[caso real]** Una seccion recibia el foco al navegar y Chrome le dibujaba su

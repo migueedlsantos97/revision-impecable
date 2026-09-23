@@ -187,6 +187,30 @@ mirar el peor punto, no el promedio.
   campos del panel se anunciaban "Estado, elegir" y nunca decían qué estaba
   elegido, porque el `aria-label` tapa el contenido del botón. **[caso real]**
 
+- **Auditá el foco por selector, elemento por elemento, no mirando.** Es la
+  unica forma: `:focus` solo aplica cuando la ventana tiene foco, asi que en un
+  navegador que no esta al frente el anillo no se pinta nunca y el defecto es
+  invisible. El barrido:
+
+  1. Juntar las reglas de foco de la hoja y sacarles el `:focus`.
+  2. Enumerar todo lo enfocable, **incluido lo que recibe foco por codigo**:
+     `a[href], button, input, select, textarea, summary, [tabindex], dialog,
+     [popover]`.
+  3. Por cada elemento, ver si **alguna regla entera** lo alcanza con
+     `element.matches(...)`. Los que no, caen al anillo de fabrica.
+
+  Cuidado al partir selectores por comas: `:is(a,b,c)` las lleva adentro y
+  despedazarlo da un resultado falso. Se prueba la regla completa.
+
+  **[caso real]** Once elementos caian al anillo por defecto en dos vistas: una
+  seccion de 3666px que se enmarcaba entera, cinco dialogos, dos calendarios
+  propios y sus titulos de mes. Ninguno lo vio nadie.
+
+- **Un contenedor que recibe foco por codigo no lleva anillo, pero un control
+  siempre si.** La regla que los apaga tiene que listar las etiquetas:
+  `[tabindex="-1"]:focus` a secas pesa mas que `button:focus-visible` y le saca
+  el anillo a un boton. **[caso real]**
+
 ### 5. Textos y nomenclatura
 
 - **Un nombre por cosa**, en toda la superficie. Revisá interfaz, mensajes
