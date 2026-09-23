@@ -183,6 +183,21 @@ mismo archivo salen concatenados en una sola cabecera contradictoria, del tipo
 `max-age=2592000, max-age=31536000, immutable`. Se comprueba con
 `curl -sI <url> | grep -i cache-control`.
 
+## `:focus` no existe si la ventana no tiene foco
+
+**[caso real]** Una seccion recibia el foco al navegar y Chrome le dibujaba su
+anillo de fabrica: un trazo negro enmarcando 3666px de alto. No lo vio nadie
+—ni once revisores ni yo— porque **`:focus` solo aplica cuando la ventana tiene
+foco**, y la pestaña donde se revisa no lo tiene nunca. `document.activeElement`
+devuelve el elemento correcto, `element.matches(':focus')` devuelve `false`, y
+el anillo no se pinta.
+
+O sea: **cualquier defecto de anillo de foco es invisible en un navegador que no
+esta al frente.** Se revisa por CSS, no por observacion: listar que selectores
+cubre la regla de foco del sitio y comprobar que alcanzan a todo lo que puede
+recibir foco, incluidos los contenedores con `tabindex="-1"` que reciben foco
+por codigo.
+
 ## No ver algo no es prueba de nada
 
 **[caso real]** Medi que un modulo pesado "no se habia pedido" y lo di por
