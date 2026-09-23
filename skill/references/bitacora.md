@@ -34,6 +34,54 @@ escapes hubo**: defectos que alguien encontró después de que la revisión dijo
 
 ---
 
+## 2026-09-26 — Proyecto 1 (salón de eventos)
+
+Segunda corrida completa. La primera con datos sembrados y midiendo en el ancho
+real del telefono de quien revisa el trabajo.
+
+- **Alcance**: los once.
+- **Hallazgos**: 61 confirmados, 9 plausibles, 3 descartados. Por cajon: 14 / 29 / 18.
+- **Escapes de la corrida anterior**: **4**, contra 1 de la vez pasada. La nota
+  empeoro, y el motivo es claro: entre una corrida y la otra se agrego el panel
+  entero y se toco el sitio en 30 commits. Los cuatro escapes:
+  - Dos controles nativos en el panel (encargo 2). No faltaba el check: el test
+    comprobaba 9 tipos en el sitio publico y 2 en el panel. **Una asimetria
+    entre superficies es un agujero, aunque las dos esten cubiertas.**
+  - El footer de 866px contra 812 de pantalla (encargo 7). El encargo pedia
+    desborde horizontal y nadie penso en el vertical.
+  - Un icono a 54x54 en la pantalla de acceso (encargo 8). Esta `hidden`: el
+    revisor nunca la renderizo.
+  - `UYU 0` en Android (ningun encargo). No existia el concepto de "dato que
+    cambia segun los datos regionales del aparato".
+- **Lo que encontro que nadie habia visto**: un arreglo propio de la moneda
+  quedo a mitad -el separador de miles seguia en Intl-; las reglas de cache
+  volvieron a chocar con /vendor por la misma causa que ya se habia arreglado en
+  /assets; los puntos del calendario puestos ese mismo dia eran indistinguibles
+  a 1,03:1; el panel guardaba la fecha de la senia en UTC; la casilla obligatoria
+  solo se pintaba con :has(); y "Como llegar" abria una busqueda de Google.
+- **Falsos positivos**: 3, los tres refutados con prueba. Dos los refuto **el
+  propio revisor que los levanto**, uno con fontTools y otro midiendo los
+  contenedores. El tercero se refuto con un control de sanidad previo, porque
+  el navegador congelaba el foco y sin el control la medicion habria mentido en cualquier direccion.
+- **Cambios a la skill**:
+  - `encargos.md` 3: medir los literales que comparten caja con un token variable
+    contra los cinco valores del token.
+  - `encargos.md` 4: un control propio hereda la obligacion de anunciar su valor.
+  - `encargos.md` 6: listar todo `Intl`/`toLocale*` y decir si el texto exacto importa.
+  - `encargos.md` 7: medir el alto de cada bloque contra el viewport, no solo el ancho.
+  - `encargos.md` 8: renderizar todo lo que arranca `hidden`; sembrar el estado.
+  - `encargos.md` 10: seguir cada enlace saliente hasta su URL final con `curl -sLI`.
+  - `tecnicas.md`: el estado vacio esconde la mitad de los errores; los anchos de
+    prueba se preguntan, no se eligen; los datos regionales cambian segun el aparato.
+- **Hipotesis**: que **el revisor mas util es el que revisa lo que toco quien
+  revisa**. Cinco de los diez hallazgos del primer cajon eran codigo escrito ese
+  mismo dia, incluidos dos arreglos propios incompletos. La corrida anterior
+  no tenia este patron porque revisaba codigo viejo. Si se repite en un tercer
+  proyecto, corresponde un encargo nuevo: "lo que cambio en los ultimos N commits".
+- **Checks dormidos**: `type=color`, `type=file`, `<datalist>`, `type=week` y
+  `<progress>`/`<meter>` no dispararon **ni esta corrida ni la anterior**. Van a
+  la tercera. Si en la proxima siguen mudos, se borran de `NATIVOS`.
+
 ## 2026-09-23 — Proyecto 1 (salón de eventos)
 
 Primera corrida del procedimiento completo. Once revisores, dos rondas.

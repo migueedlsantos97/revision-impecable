@@ -129,6 +129,12 @@ real**, que muchas veces es el de la tarjeta y no el de la página.
 Revisá también el texto sobre foto: ahí el fondo varía por píxel y hay que
 mirar el peor punto, no el promedio.
 
+- **Los colores literales que conviven con un token variable.** Un marrón fijo
+  puede pasar contra el fondo neutro y fallar contra los cinco valores del
+  token que tiene al lado: el texto de un chip daba 3,20:1 al elegirlo en los
+  cinco temas. Listá cada literal que comparta caja con un `var(--…)` y medilo
+  contra todos los valores de ese token. **[caso real]**
+
 ### 4. Teclado, foco y lectores
 
 - Recorré con Tab. **Toda acción que se hace con el mouse tiene que poder
@@ -175,6 +181,11 @@ mirar el peor punto, no el promedio.
   que lo contiene.
 - `<th>` con `scope`. Listas de características como `<ul>`, no como `<div>` de
   `<span>` con un separador en `::before`.
+
+- **Un control propio que reemplaza a un `<select>` o a un `<input type=date>`
+  hereda la obligación de anunciar su valor, no solo su etiqueta.** Cinco
+  campos del panel se anunciaban "Estado, elegir" y nunca decían qué estaba
+  elegido, porque el `aria-label` tapa el contenido del botón. **[caso real]**
 
 ### 5. Textos y nomenclatura
 
@@ -228,6 +239,13 @@ solo se puede confirmar en un iPhone real.
 
 ## Ronda B — sobre el sitio andando
 
+- **Todo lo que dependa de los datos regionales del aparato.** `Intl` con
+  `style:'currency'` daba `$ 0` en una computadora y `UYU 0` en Chrome de
+  Android, que no trae los datos de esa región; el agrupamiento de miles tiene
+  la misma dependencia y convierte `45.000` en `45,000`. Vale igual para
+  fechas, meses y orden alfabético. Listá cada uso de `Intl` y `toLocale*` y
+  decí si el texto exacto importa. **[caso real, dos veces]**
+
 ### 7. Anchos y reflujo
 
 Probá 360, 390, 768, 860, 1024, 1280 y 1440. En cada uno, el script de desborde
@@ -245,6 +263,11 @@ de `tecnicas.md`.
   texto al 200% y espaciado de texto.
 - Palabras largas sin espacios y nombres de cuarenta caracteres.
 
+- **Un bloque que mide más que la pantalla.** No es desborde horizontal y
+  ningún check lo agarraba: el footer del celular medía 866px contra 812 de
+  viewport y se leía como una segunda página. Medí el alto de cada bloque
+  grande contra `innerHeight` y decilo cuando lo supere. **[caso real]**
+
 ### 8. Estados límite
 
 Cada pantalla tiene más de un estado y normalmente solo se diseñó el feliz.
@@ -260,6 +283,15 @@ Forzá y mirá:
   después de enviar.
 - **Sin JavaScript**: ¿hay `<noscript>` y dice algo útil?
 - Si hay panel privado: qué pasa al vencer la sesión con el formulario abierto.
+
+- **Las pantallas que arrancan `hidden`.** Un ícono sin dimensionar salió a
+  54×54 en la pantalla de acceso del panel y el revisor nunca la vio, porque
+  está oculta hasta que falla la sesión. Listá todo `[hidden]` y todo
+  `display:none` del HTML, mostralo, y revisalo como cualquier otra pantalla.
+  **[caso real]**
+- **Sembrá el estado antes de mirar.** Contador en cero, lista vacía y día sin
+  eventos son los cuatro estados más fáciles de revisar y los que menos prueban.
+  **[caso real]**
 
 ### 9. Rendimiento
 
@@ -306,6 +338,11 @@ Mirá la página como quien llega por primera vez y tiene que decidir.
   embudo hasta que la persona envía, y el punto más caro estaba después: una
   consulta que se guarda y no le avisa a nadie muere si el dueño no abre el
   panel. Justo la que el diseño quería rescatar.
+
+- **Seguí cada enlace saliente hasta su URL final** con `curl -sLI` y mirá
+  dónde termina. Un `share.google/…` parecía el perfil del negocio y terminaba
+  en `google.com/search`: el botón "Cómo llegar" no abría una ruta. Leyendo el
+  HTML es invisible. **[caso real]**
 
 ### 11. Dirección de arte
 
