@@ -34,6 +34,54 @@ escapes hubo**: defectos que alguien encontró después de que la revisión dijo
 
 ---
 
+## 2026-10-07 — Proyecto 2 (plataforma de pedidos de barrio)
+
+Primera corrida en este proyecto: tienda con dos comercios, checkout,
+seguimiento y panel del personal con sondeo cada 10 s. Diez revisores para los
+once encargos (7 y 8 los hizo uno solo, en orden, porque son los del navegador).
+
+- **Alcance**: los once.
+- **Hallazgos**: unos 124 reportados. Por cajón, aproximado: 11 / 63 / 38, más
+  12 de gusto o decisión del cliente. Arreglados 74 puntos en tres tandas
+  paralelas (tienda, panel, servidor) sobre archivos separados.
+- **Escapes de la corrida anterior**: no aplica (primera corrida acá). Sí hubo
+  cuatro pasadas de QA manual previas; lo que esta corrida encontró y esas no
+  —regiones vivas inertes bajo un `<dialog>` modal, foco perdido por el
+  sondeo, `stroke-width` del `<symbol>` que anulaba el CSS, el carrito sin red
+  que se presentaba como borrado— es la medida de lo que agrega el procedimiento.
+- **Falsos positivos**: 1 descartado ("9.30" como hora inválida: se normalizaba
+  bien). Cuatro sospechas marcadas "medir en navegador" por revisores de código
+  (regiones vivas, stroke-width, popover, foco del checkout) se confirmaron
+  las cuatro al medir. **Pedirle al revisor de código que diga qué no midió
+  funcionó**: ninguna llegó como certeza falsa.
+- **Cambios a la skill**:
+  - `SKILL.md` paso 1: pedir URL desplegada, iOS mínimo e instancia propia
+    para mutar estado; listar lo que cambió en los últimos commits y dárselo a
+    cada revisor como prioridad (**la hipótesis del proyecto 1 se repitió**: el
+    importador escrito esa mañana juntó ocho hallazgos de cinco revisores).
+  - `SKILL.md` paso 2: 7 y 8 pueden ir a un solo revisor, en orden.
+  - `encargos.md` 1: `stroke-width` en `<symbol>` pisa al CSS.
+  - `encargos.md` 2: valor combinado de fecha+hora propios; respaldo `fixed`
+    sin `popover` y reubicación al desplazar.
+  - `encargos.md` 4: sondeo periódico que redibuja; regiones vivas fuera del
+    `<dialog>` modal.
+  - `encargos.md` 8: sesión vencida que tapa el login, lo guardado sin red
+    presentado como borrado, estados terminales con instrucciones vivas,
+    archivos subidos (vacío, `;`, Windows-1252, topes del servidor).
+  - `tecnicas.md`: comprobar que un glifo está en el `cmap` de la fuente.
+  - **Borrado**: `type="color"` del grep del encargo 2, tres corridas sin
+    disparar. `type="file"` **disparó** esta vez (foto del producto que no se
+    vaciaba al rechazarla) y se queda. `<datalist>`, `type=week` y
+    `<progress>`/`<meter>` tampoco dispararon, pero no figuraban como check
+    escrito en la skill: no hay nada que borrar.
+- **Hipótesis**: que los encargos de código rinden más cuando el sitio tiene
+  estado vivo (sondeo, sesiones, carritos persistidos): el encargo 4 trajo
+  14 hallazgos, el doble que en el proyecto 1. Si se repite, el encargo 4 se
+  parte en "estático" y "app con estado".
+- **Checks dormidos**: dirección de arte no encontró nada sobre consistencia
+  de recortes entre fotos que no estuviera ya en el encargo; ninguno cumple
+  tres corridas todavía.
+
 ## 2026-09-26 — Proyecto 1 (salón de eventos)
 
 Segunda corrida completa. La primera con datos sembrados y midiendo en el ancho

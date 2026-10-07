@@ -45,6 +45,17 @@ producción. **Sin el paso 3 esto no sirve.**
 - Corré los tests que ya existan y anotá el número. Es la línea de base.
 - Leé `CLAUDE.md` o equivalente: lo que ya está decidido no se vuelve a
   discutir, y lo que figura como pendiente son hallazgos ya conocidos.
+- Juntá los datos que los revisores no pueden adivinar y que en el proyecto 2 tres de
+  ellos reclamaron: **la URL desplegada** (compresión, cabeceras y vista previa
+  reales), **el iOS más viejo que hay que soportar** (sin ese número, la mitad
+  de compatibilidad es ruido o es grave) y **una instancia propia** donde
+  puedan cerrar el comercio, agotar stock o vaciar el catálogo sin tocar la de
+  los demás.
+- Listá lo que cambió desde la última revisión o en los últimos commits
+  (`git log --name-only`). **Va a cada revisor como prioridad.** Era hipótesis
+  en el proyecto 1 (cinco de diez hallazgos graves eran código del mismo día) y
+  se repitió en el proyecto 2: el importador escrito esa mañana juntó ocho hallazgos de
+  cinco revisores distintos.
 - Leé `references/bitacora.md`. Si hay una entrada previa **de este proyecto**,
   buscá los escapes antes de empezar:
 
@@ -71,7 +82,9 @@ primera corrida real dos chocaron en vivo y uno le sacó la pestaña al otro a
 mitad de una medición. Despachá juntos los que trabajan con `curl`, con los
 archivos y con el código —rendimiento, conversión y dirección de arte— diciéndoles
 explícitamente que **no usen el navegador**, y hacé vos los que sí lo necesitan,
-anchos y estados límite, uno después del otro.
+anchos y estados límite, uno después del otro. También sirve darle **los dos a
+un solo revisor**, en orden: en el proyecto 2 fue el que más tardó y el que más encontró
+en vivo, sin choques.
 
 **Ronda A, sobre el código:**
 

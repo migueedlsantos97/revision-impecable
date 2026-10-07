@@ -48,6 +48,12 @@ Buscá:
   de alto no es una pastilla; es un rectángulo con las esquinas muy comidas.
 - **Nesting de radios.** El radio interior tiene que ser menor que el exterior
   menos el padding, o la curva se ve torcida.
+- **[caso real] Una excepción de trazo que no hace nada.** Si el sprite declara
+  `stroke-width="2"` en cada `<symbol>`, ese atributo gana sobre lo que hereda
+  el `<svg class="icon">`, y las reglas CSS que piden 2,5 o 3 no cambian un
+  píxel. Buscá `stroke-width` en el CSS y en el sprite a la vez; se confirma
+  renderizando el ícono con dos valores y comparando los PNG. (Proyecto 2: cinco reglas
+  muertas, tildes de 1,3px donde se quería 2.)
 
 Proponé la escala corta que reemplaza a lo que encontraste, y a qué valor va
 cada caso.
@@ -95,7 +101,7 @@ números de otros sitios sobre el panel privado del cliente.
 **Cómo se encuentra sin abrir el navegador:**
 
 ```bash
-grep -c '<select\|type="date"\|type="time"\|type="color"\|type="file"' *.html
+grep -c '<select\|type="date"\|type="time"\|type="file"' *.html
 grep -c "el('select'\|createElement('select')" *.js
 grep -c 'autocomplete="off"' *.html
 ```
@@ -109,6 +115,15 @@ grep -c 'autocomplete="off"' *.html
   `type="hidden"`, `required` no hace nada y el formulario se envía vacío. Hay
   que validarlo en el código, que además es lo que corresponde si el formulario
   ya lleva `novalidate`.
+- **[caso real] El valor combinado también.** Un `datetime-local` reemplazado
+  por día + hora propios arma `"T10:00"` si falta el día, y
+  `new Date(...).toISOString()` tira `RangeError`: el submit muere sin aviso y
+  "Guardar" no hace nada. El nativo devolvía vacío. Probá cada mitad sola. (Proyecto 2)
+- **[caso real] Sin `popover` el respaldo tiene que ser `position:fixed`.** Las
+  coordenadas de `getBoundingClientRect()` son del viewport; si el flotante cae
+  en `position:absolute` dentro de un padre relativo (Safari < 17), aparece
+  corrido o recortado. Y se reubica con `scroll` (en captura), `resize` y
+  `visualViewport`, no solo al abrir. (Proyecto 2)
 
 ### 3. Contraste y color
 
@@ -206,6 +221,18 @@ mirar el peor punto, no el promedio.
   seccion de 3666px que se enmarcaba entera, cinco dialogos, dos calendarios
   propios y sus titulos de mes. Ninguno lo vio nadie.
 
+- **[caso real] El sondeo periódico.** Si la app consulta cada N segundos y
+  redibuja con `innerHTML`, el foco se pierde cada N segundos aunque nada haya
+  cambiado. Buscá `setInterval` y los `innerHTML`/`replaceChildren` que llama:
+  no tienen que tocar el DOM si los datos son iguales, y cuando lo tocan
+  devuelven el foco al equivalente. Una lista completa con `aria-live` que se
+  redibuja se relee entera: se anuncia un resumen, no la lista. (Proyecto 2, panel)
+- **[caso real] Las regiones vivas fuera de un `<dialog>` modal están muertas.**
+  `showModal()` vuelve inerte todo lo de afuera, incluido el `#live` del
+  `<body>`. Abrí el diálogo y contá los nodos del árbol de accesibilidad
+  (`page.accessibility.snapshot()`): si `#live` desaparece, cada `announce()`
+  con un diálogo abierto no lo oye nadie. Lo mismo con los toasts. (Proyecto 2: 227
+  nodos con el diálogo contra 1834 sin él.)
 - **Un contenedor que recibe foco por codigo no lleva anillo, pero un control
   siempre si.** La regla que los apaga tiene que listar las etiquetas:
   `[tabindex="-1"]:focus` a secas pesa mas que `button:focus-visible` y le saca
@@ -307,6 +334,19 @@ Forzá y mirá:
   después de enviar.
 - **Sin JavaScript**: ¿hay `<noscript>` y dice algo útil?
 - Si hay panel privado: qué pasa al vencer la sesión con el formulario abierto.
+  **[caso real]** El modal de edición quedaba encima del login y la única
+  salida era Cancelar, perdiendo lo escrito. (Proyecto 2)
+- **[caso real] Sin red, lo guardado no puede parecer borrado.** Con el
+  catálogo sin cargar, el carrito decía "Producto que ya no está", total $0, y
+  ofrecía "Quitar". Distinguí "no cargó" de "no existe" en todo lo que se arma
+  cruzando datos guardados con datos de la red. (Proyecto 2)
+- **[caso real] Estados terminales.** Un pedido rechazado o cancelado seguía
+  diciendo "pagás al retirar" y "retirás por la caja". Recorré cada estado
+  final y leé qué instrucciones quedan en pantalla. (Proyecto 2)
+- **Archivos que sube la persona**: vacío, sin cabecera, separado por `;` y en
+  Windows-1252 (así guarda Excel en español), más largo que los topes del
+  servidor. Si el cliente valida menos que el servidor, la vista previa dice
+  "listo" y el envío falla. (Proyecto 2, importador CSV)
 
 - **Las pantallas que arrancan `hidden`.** Un ícono sin dimensionar salió a
   54×54 en la pantalla de acceso del panel y el revisor nunca la vio, porque

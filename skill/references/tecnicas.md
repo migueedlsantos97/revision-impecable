@@ -302,3 +302,12 @@ curl -sI https://<dominio>/ | grep -iE 'content-security|x-frame|strict-transpor
 Para ver el estado de carga o de error hay que provocarlos. Apagar la red desde
 las herramientas, devolver un 500 desde el servidor de desarrollo, o llamar a la
 función de render con datos vacíos. Un estado que no viste no está revisado.
+
+## Un glifo que la fuente no trae
+
+Antes de aceptar un carácter como ícono o como flecha de texto (✳ → ✓ ★),
+comprobá que esté en el `cmap` de la fuente servida. Un `.woff2` se abre con
+Node sin dependencias: `zlib.brotliDecompressSync` sobre las tablas y leer el
+`cmap`. Si no está, lo dibuja una fuente del sistema distinta en cada aparato,
+y en Android puede salir como emoji a color. **[caso real]** En el proyecto 2, ✳ (9
+estados vacíos) y → (historial del panel) no estaban; ×, − y … sí.
