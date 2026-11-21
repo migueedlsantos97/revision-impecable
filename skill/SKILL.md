@@ -1,229 +1,238 @@
 ---
 name: revision-impecable
-description: Revisión final exhaustiva de una web antes de mostrársela a un cliente o desplegarla. Úsala cuando te pidan "revisá todo", "que quede impecable", "antes de mostrarlo", "no quiero novatadas", o cuando una web esté por salir a producción. Despacha once revisores especializados en paralelo, hace refutar cada hallazgo antes de aceptarlo, los ordena por lo que le cuesta la venta, deja un informe y aprende de lo que se le escapó. No se cierra hasta que nada parezca accidental.
+description: Revisa, prueba y deja impecable cualquier web o app andando, en cualquier proyecto. Úsala cuando pidan "revisá todo", "que quede impecable", "probá la app", "testeá", "antes de mostrarlo", "antes de desplegar", "dejalo corriendo toda la noche" o "no quiero novatadas". Mide con un script lo que no necesita criterio, despacha revisores en paralelo para lo que sí, prueba las funciones como un usuario, refuta cada hallazgo, arregla en el componente compartido para todas las pantallas y sistemas, y aprende de lo que se le escapó. Puede trabajar sola de noche.
 ---
 
 # Revisión impecable
 
-Quien encarga una web la revisa hasta el último detalle, y tiene razón: para
-quien la hizo es su carta de presentación y de ahí sale el boca a boca. Esta
-skill existe para llegar a esos detalles **antes** que el cliente.
+Como tener un equipo de testers, diseñadores y programadores revisando la app
+entera. Llega a los detalles **antes** que la persona que la usa, los arregla, y
+cada corrida aprende de lo que se le escapó a la anterior.
 
-Y para que cada vez llegue más lejos: el paso 7 hace que la skill se corrija a
-sí misma con lo que se le escapó.
+La regla de fondo: **no se termina cuando funciona, se termina cuando nada
+parece accidental.** Un valor que no se eligió, un control que dibujó el
+sistema, dos cosas parecidas que no son iguales.
 
-## Por qué en paralelo y no en lista
+## Cinco ideas que mandan sobre todo lo demás
 
-Un revisor solo, por atento que sea, arrastra sus propios puntos ciegos: da por
-bueno lo que él mismo decidió hace dos horas. La única forma de romper eso es
-que miren varios, **cada uno con un encargo estrecho y sin ver los hallazgos de
-los otros**.
+1. **Sin verificación no hay loop.** Nada se da por bueno sin verlo andar: se
+   corre la app, se usa como una persona, se mira la captura, se lee el dato
+   guardado. "Compila" o "el agente dijo que anda" no es prueba.
+2. **Lo mecánico lo hace un script; el criterio, los agentes.** Contraste,
+   tamaños, desbordes, solapes, controles de fábrica, foco, tema a medias y
+   consistencia los mide `scripts/medir.py` en minutos y siempre igual. Los
+   revisores gastan su criterio en lo que un script no ve.
+3. **Se arregla el entorno, no el caso.** Un defecto que aparece en dos lugares
+   se arregla en el componente, el token o la regla compartida, y vale para
+   todas las pantallas y todos los sistemas. Nunca un parche por pantalla.
+4. **Cada error se vuelve estructura.** Lo que se escapó una vez se convierte en
+   un chequeo del script, un lint o un test que falla si vuelve. Recién si
+   necesita criterio, en una línea de encargo.
+5. **Lo general vive en la skill; lo del proyecto, en su adaptador.** Esta
+   skill sirve para cualquier app. Lo propio de cada una (cómo se levanta, sus
+   pantallas, sus funciones, sus reglas de diseño) vive en
+   `.claude/revision/` dentro de ese proyecto, y la skill lo genera y lo
+   mantiene.
 
-No es teoría. En el primer proyecto donde se usó, yo ya había recorrido el formulario entero
-cuando un revisor de accesibilidad encontró que el botón "Cómo usamos tus
-datos" vivía dentro del label del consentimiento, y por eso su texto se pegaba
-al nombre de la casilla: quien no ve la pantalla escucha las dos cosas como una
-sola frase. Lo había mirado y no lo vi.
+El estándar de diseño de base son las reglas de Apple (Human Interface
+Guidelines) resumidas en `references/hig.md`. Las reglas del proyecto, si las
+tiene, mandan sobre ellas.
 
-El mismo hallazgo dejó la otra lección, más cara. El revisor afirmaba además
-que activar el botón **marcaba o desmarcaba la casilla**. Sonaba grave, era
-verosímil, y lo di por bueno sin reproducirlo. Es falso: el navegador no dispara
-la activación del label cuando el clic cae en un descendiente interactivo. Lo
-reporté como el hallazgo más grave de la revisión y no lo era. Por eso existe el
-paso 3.
+## Dos modos
 
-Y al revés: más revisores sin refutación son más ruido. En la misma sesión una
-sospecha de bypass por codificación de URL resultó falsa al probarla contra
-producción. **Sin el paso 3 esto no sirve.**
+- **Acompañado** (por defecto): se corre con la persona presente; los cambios
+  de diseño grandes se muestran antes de aplicarlos.
+- **Noche** (cuando la persona dice "dejalo corriendo", "trabajá sola", "toda la
+  noche", o el adaptador dice `"autonomia": "noche"`): **no se pregunta nada.**
+  Se decide con las reglas de diseño, se rediseña si hace falta, se arregla, se
+  verifica y se commitea en una rama. La persona revisa a la mañana. Ver
+  `references/noche.md`.
 
-## El procedimiento
+**Límites que ningún modo cruza:** nunca producción, nunca datos reales, nunca
+deploy, nunca push a la rama principal ni `--force`, nunca borrar datos de la
+persona, nunca matar procesos por nombre (solo los que levantó la corrida),
+nunca escribir secretos en el repo. Si algo de eso hace falta, se deja anotado
+en el informe como pendiente.
 
-### 1. Preparar el terreno y medir la vez anterior
+## Procedimiento
 
-- Levantá el sitio y dejá la URL a mano. Los revisores de la ronda B la
-  necesitan.
-- Corré los tests que ya existan y anotá el número. Es la línea de base.
-- Leé `CLAUDE.md` o equivalente: lo que ya está decidido no se vuelve a
-  discutir, y lo que figura como pendiente son hallazgos ya conocidos.
-- Juntá los datos que los revisores no pueden adivinar y que en el proyecto 2 tres de
-  ellos reclamaron: **la URL desplegada** (compresión, cabeceras y vista previa
-  reales), **el iOS más viejo que hay que soportar** (sin ese número, la mitad
-  de compatibilidad es ruido o es grave) y **una instancia propia** donde
-  puedan cerrar el comercio, agotar stock o vaciar el catálogo sin tocar la de
-  los demás.
-- Listá lo que cambió desde la última revisión o en los últimos commits
-  (`git log --name-only`). **Va a cada revisor como prioridad.** Era hipótesis
-  en el proyecto 1 (cinco de diez hallazgos graves eran código del mismo día) y
-  se repitió en el proyecto 2: el importador escrito esa mañana juntó ocho hallazgos de
-  cinco revisores distintos.
-- Leé `references/bitacora.md`. Si hay una entrada previa **de este proyecto**,
-  buscá los escapes antes de empezar:
+### 0. El adaptador del proyecto
+
+Buscá `.claude/revision/proyecto.json` en la raíz.
+
+- **No existe:** generalo siguiendo `references/adaptador.md`. Se lee el repo,
+  no se le pregunta a la persona lo que se puede averiguar. Antes de seguir,
+  probalo de punta a punta: levantar, chequear, entrar con cada rol, medir una
+  pantalla, apagar.
+- **Existe:** corré su chequeo (`doctor`). Si una pantalla nueva no está en el
+  mapa (rutas, menús o commits recientes que agregan vistas), agregala. Un mapa
+  desactualizado es un escape esperando.
+
+### 1. Preparar
+
+- Trabajá en una rama `revision/<fecha>` (en modo noche, obligatorio).
+- Levantá la instancia de **prueba** del adaptador. Corré los tests que ya
+  existan y anotá el número: es la línea de base.
+- Leé las reglas del proyecto (`.claude/revision/reglas.md`, `CLAUDE.md`, guías
+  de diseño). Lo decidido no se discute; lo pendiente ya es un hallazgo conocido.
+- **Escapes de la vez anterior.** Si `reglas.md` tiene una revisión previa:
+
+  ```bash
+  git log --oneline --since="<fecha de la revisión anterior>" -- <rutas que cubrió>
+  ```
+
+  Todo commit posterior que arregle algo que la revisión debió cazar es un
+  escape. Son la nota de la vez pasada y la materia prima del paso 8.
+- **Lo que cambió último va primero.** `git log --name-only` de los últimos días
+  va a cada revisor como prioridad: en los dos primeros proyectos, la mitad de
+  lo grave estaba en código del mismo día.
+
+### 2. Medir (script, minutos)
 
 ```bash
-git log --oneline --since="<fecha de la revisión anterior>" -- <rutas que cubrió>
+python <skill>/scripts/medir.py --config .claude/revision/proyecto.json
 ```
 
-Todo commit posterior que arregle algo que la revisión debió haber encontrado es
-un **escape**. Anotalos: son la nota de la vez pasada y la materia prima del
-paso 7. Si tenés a mano a quien encargó el sitio, preguntale qué encontró
-después.
+Recorre cada pantalla en 390, 768, 1366 y 1920 px, en claro y oscuro, y deja en
+`.claude/revision/salida/<fecha>/`: `informe.md` (fallas agrupadas y las formas
+de cada componente), `informe.json`, capturas y una hoja de contacto por
+pantalla. `--rapido` mide solo 390 y 1366 para las vueltas intermedias.
 
-### 2. Despachar los once revisores
+Lo que el script marca como **medida** (contraste, táctil, texto chico,
+desborde, recortado, control nativo, glifo, imagen rota, consola, no carga,
+foco invisible) está confirmado: se reproduce corriéndolo de nuevo. Lo que marca
+como **sospecha** (solape, tema a medias, variantes, casi iguales, distinto por
+sistema, mismo rótulo con distinta forma) se refuta mirando la captura antes de
+arreglar. Los umbrales salen del adaptador; los de base son los de Apple.
 
-Los encargos completos están en `references/encargos.md`. Las técnicas
-compartidas, en `references/tecnicas.md`. Pasale a cada revisor **su sección
-entera**, la raíz del proyecto y el contrato de salida de abajo.
+### 3. Revisores en paralelo (criterio)
 
-Van en dos rondas porque la segunda necesita el sitio corriendo. La ronda A se
-despacha entera, todos a la vez, en un solo mensaje.
+Los encargos están en `references/encargos.md`; las técnicas, en
+`references/tecnicas.md`. Despachá **todos juntos, en un solo mensaje**, cada
+uno con: su sección entera, la raíz, el `informe.md` de la medición, la carpeta
+de capturas, el feature map y el contrato de salida de abajo.
 
-**La ronda B no.** Cinco revisores no pueden compartir un solo navegador: en la
-primera corrida real dos chocaron en vivo y uno le sacó la pestaña al otro a
-mitad de una medición. Despachá juntos los que trabajan con `curl`, con los
-archivos y con el código —rendimiento, conversión y dirección de arte— diciéndoles
-explícitamente que **no usen el navegador**, y hacé vos los que sí lo necesitan,
-anchos y estados límite, uno después del otro. También sirve darle **los dos a
-un solo revisor**, en orden: en el proyecto 2 fue el que más tardó y el que más encontró
-en vivo, sin choques.
-
-**Ronda A, sobre el código:**
-
-| # | Revisor | Busca |
+| # | Revisor | Mira |
 |---|---|---|
-| 1 | Consistencia visual | quince valores donde debería haber cinco |
-| 2 | Controles del sistema | lo que dibuja el navegador y no la marca |
-| 3 | Contraste y color | razones calculadas, no miradas |
-| 4 | Teclado y lectores | lo que no se puede hacer sin mouse |
-| 5 | Textos y nomenclatura | dos nombres para la misma cosa |
-| 6 | Compatibilidad y Safari | lo que rompe fuera de Chromium |
+| 1 | Funciones | cada función del feature map, de punta a punta, como un usuario, con el dato guardado como prueba |
+| 2 | Diseño y consistencia | las capturas contra Apple, las referencias del proyecto y entre sí: una sola forma por componente en toda la app |
+| 3 | Controles, teclado y lectores | lo que dibuja el sistema y lo que no se puede hacer sin mouse |
+| 4 | Textos | un nombre por cosa, concordancia, palabras del usuario y no del sistema |
+| 5 | Estados límite y anchos | vacío, error, lento, desbordado, sesión vencida, entre breakpoints |
+| 6 | Datos, permisos y seguridad | quién puede hacer qué, qué se pierde, qué se duplica, qué queda abierto |
+| 7 | Web pública (solo si lo es) | Safari, rendimiento, cómo se comparte, conversión, imágenes |
 
-**Ronda B, sobre el sitio andando:**
+Los que **cambian datos** (1, 5 y 6) trabajan cada uno con **su propia
+instancia** y sus datos de prueba (el adaptador dice cómo levantar otra en otro
+puerto). Dos agentes sobre la misma instancia se pisan.
 
-| # | Revisor | Busca |
-|---|---|---|
-| 7 | Anchos y reflujo | el hueco entre breakpoints |
-| 8 | Estados límite | vacío, cargando, caído, desbordado |
-| 9 | Rendimiento | peso, primer dibujo, gama baja |
-| 10 | Conversión y cómo se comparte | qué ve quien llega y quien recibe el link |
-| 11 | Dirección de arte | las imágenes como conjunto |
+Si el encargo es puntual, elegí los revisores que correspondan y decilo.
 
-Si el encargo es un repaso puntual y no un prelanzamiento, elegí los revisores
-que correspondan y decilo en el informe. Once es para cuando la web se va a
-mostrar.
+**Contrato de salida.** Cada hallazgo lleva:
 
-**Contrato de salida.** Cada revisor entrega una lista, y cada hallazgo lleva:
+- dónde: `archivo:línea`, o pantalla + ancho + tema, o selector;
+- **qué le pasa a una persona**, en una frase, no qué regla se incumple;
+- **la prueba**: número, salida de comando, captura con la ruta, dato leído;
+- severidad propuesta con el criterio del paso 5, y si es gusto, decirlo;
+- **dónde se arregla una sola vez** (componente, token, regla compartida) si
+  aparece en más de un lugar.
 
-- `archivo:línea` o la URL y el ancho donde pasa.
-- Una frase con **qué se rompe**, no qué regla se incumple.
-- **La prueba**: el número calculado, la salida del comando, el selector que no
-  matchea. Sin prueba no es hallazgo, es opinión.
-- Un **escenario concreto**: qué hace una persona y qué le pasa.
-- Severidad propuesta, con el criterio del paso 4.
-- Si es gusto y no error, decirlo. Eso no se arregla, se reporta.
+Y una línea final: qué no pudo revisar y qué le faltó al encargo.
 
-Pedile además **una línea final**: qué se quedó con ganas de revisar y no pudo,
-y qué le faltó en su encargo. Eso alimenta el paso 7.
+### 4. Refutar antes de aceptar
 
-### 3. Refutar antes de aceptar
-
-Ningún hallazgo se arregla por venir de un revisor. Por cada uno, **intentá
-demostrar que está mal**: reproducilo en el navegador, calculá el número vos,
-probá el caso contra el sitio real. Recién ahí ponés veredicto.
+Ningún hallazgo se arregla por venir de un revisor. Por cada uno, intentá
+demostrar que está mal: reproducilo, medilo vos, probá el caso contra la
+instancia. Veredicto:
 
 - **CONFIRMADO**: lo reprodujiste.
-- **PLAUSIBLE**: el razonamiento se sostiene pero no pudiste reproducirlo. Va al
-  informe como tal, no se arregla a ciegas.
-- **DESCARTADO**: se cae. Queda en el informe con el motivo, para que nadie lo
-  vuelva a levantar.
+- **PLAUSIBLE**: el razonamiento se sostiene pero no se pudo reproducir. Va al
+  informe; no se arregla a ciegas.
+- **DESCARTADO**: se cae. Queda en el informe con el motivo.
 
-Para lo que sea barato, despachá la refutación en paralelo igual que la
-revisión. Un verificador por dimensión alcanza.
+Una afirmación sobre cómo se comporta el navegador se prueba en el navegador
+antes de escribirla. Esto existe porque una vez se reportó como lo más grave de
+una revisión algo que era falso (ver el caso del label en `encargos.md`, 3).
 
-### 4. Ordenar por lo que cuesta
+### 5. Ordenar por lo que cuesta
 
-Ochenta hallazgos sin orden se convierten en un píxel corregido mientras la
-vista previa de WhatsApp sigue rota. Tres cajones, en este orden:
+1. **Le cuesta al usuario.** No funciona, no se entiende, pierde o duplica
+   datos, deja hacer lo que no debería, se ve roto donde se va a usar.
+2. **Delata falta de oficio.** Funciona pero se nota: controles de fábrica,
+   valores casi iguales, un botón distinto en cada sistema, textos con dos
+   nombres, lo que rompe las reglas de Apple o del proyecto.
+3. **No lo nota nadie.** Se arregla si sale barato; si no, al informe.
 
-1. **Le cuesta la venta.** Algo no funciona, no se entiende, no se puede usar, o
-   el sitio se ve mal donde el cliente lo va a mostrar. Se arregla todo.
-2. **Parece de principiante.** Funciona pero delata falta de oficio: controles de
-   fábrica, valores casi iguales, textos con dos nombres. Se arregla todo, y es
-   lo que más define la impresión.
-3. **No lo nota nadie.** Se arregla si sale barato. Si no, va al informe.
+Lo que es gusto va aparte. En modo acompañado no se toca; en modo noche se
+decide con las reglas y queda anotado como decisión, con la captura de antes.
 
-Los de gusto no entran en ningún cajón: van aparte, sin tocar.
+### 6. Arreglar, en el lugar que vale para todo
 
-### 5. Arreglar y fijar
+- **Primero la causa compartida.** Si el mismo defecto está en tres pantallas,
+  se arregla el componente, el token o la hoja común. Si cada sistema tiene su
+  propia versión del componente, se unifican en una sola compartida y los
+  sistemas pasan a usarla. El objetivo es que no pueda volver a divergir.
+- **Rediseño.** Cuando arreglar de a uno no alcanza (una pantalla confusa, una
+  jerarquía que no se lee, cinco formas de botón), se rediseña con
+  `references/hig.md` y las referencias del proyecto, aplicando la misma
+  solución en todos los sistemas. Antes y después quedan en capturas.
+- Un commit por tema, con el mensaje explicando **qué le pasaba a la persona**.
+- **Después de cada tanda, volvé a medir todo**, no solo lo tocado: un arreglo
+  en un componente compartido se nota en pantallas que nadie miró. Y corré los
+  tests y las funciones del feature map que pasan por lo cambiado.
+- Repetí 2-6 hasta que los cajones 1 y 2 estén vacíos o se llegue al tope del
+  adaptador (`"vueltas"`, por defecto 5). Lo que quede va al informe con el
+  motivo.
 
-- Un commit por tema, con el mensaje explicando **qué se rompía** y por qué.
-- Cada invariante que costó encontrar queda con un test y un comentario que dice
-  el porqué, para que nadie lo deshaga sin enterarse.
-- Después de arreglar, **volvé a correr la fase**. Un arreglo destapa otro: al
-  dibujar la casilla de consentimiento se rompió el globo de validación nativo,
-  que ya no tenía dónde anclarse.
+### 7. Fijar: que no pueda volver
 
-### 6. Dejar el informe
+Por cada clase de defecto confirmada, en este orden, la primera que funcione:
 
-Escribí `docs/revision-<fecha>.md` con la plantilla de
-`assets/plantilla-informe.md`. Tiene que entenderse solo, sin haber estado en la
-sesión: alguien que abre ese archivo dentro de seis meses tiene que saber qué se
-revisó, qué se encontró y qué se decidió dejar.
+1. **Estructura**: un solo componente o token, borrar la versión vieja que un
+   agente copiaría.
+2. **Un chequeo que falla**: si sirve para cualquier app, en
+   `scripts/medidas.js` de esta skill; si es del proyecto, en sus tests o su
+   lint, con un mensaje que diga cómo se arregla.
+3. **Un test** del comportamiento.
+4. **Texto**: una línea en el encargo o en `reglas.md`, solo si necesita
+   criterio.
 
-### 7. Aprender
+Probá que el chequeo nuevo **falla con el defecto real** antes de darlo por
+bueno.
 
-**Este paso es el que hace que la skill valga más cada vez. No es opcional y no
-se hace "si da el tiempo".**
+### 8. Informe y aprender
 
-La pregunta no es "cómo salió". Es **qué se le escapó a este procedimiento**.
-
-Respondé las cinco, con nombre y apellido, nada de generalidades:
-
-1. **Escapes.** De lo que encontraste en el paso 1, o lo que encontró quien encargó el sitio
-   después: por cada uno, ¿qué encargo debió haberlo cazado? ¿Por qué no lo
-   hizo, faltaba el check o estaba mal escrito? ¿Qué línea exacta lo habría
-   cazado?
-2. **Falsos positivos.** De lo descartado, ¿hubo un encargo que los indujo?
-   Un check redactado como sospecha genera ruido; uno redactado como prueba, no.
-3. **Checks dormidos.** ¿Qué check no disparó ni acá ni en las dos entradas
-   anteriores de la bitácora? Un check que nunca encuentra nada **se saca**. La
-   skill se hace inútil por larga mucho antes que por corta.
-4. **Técnicas nuevas.** ¿Qué tuviste que averiguar a mano que debería estar en
-   `tecnicas.md`? Un comando, una fórmula, una trampa del entorno.
-5. **Revisores flojos.** ¿Alguno entregó poco o genérico? Casi siempre es que su
-   encargo es vago. ¿Qué habría que agregarle?
-
-Después, **aplicá los cambios**, no los propongas:
-
-- Lo que tenga evidencia de esta corrida se escribe ya en `encargos.md` o en
-  `tecnicas.md`, con una línea que diga en qué proyecto se aprendió.
-- Lo que sea una corazonada se anota en la bitácora como hipótesis y espera a
-  repetirse en otro proyecto antes de convertirse en check.
-- Lo que esté dormido hace tres corridas se borra, y se deja constancia de que
-  se borró y por qué. Si vuelve a aparecer, vuelve con más razón.
-
-Y agregá la entrada a `references/bitacora.md`, con el formato que está ahí.
+- Escribí `docs/revision-<fecha>.md` con `assets/plantilla-informe.md`, con
+  capturas de antes y después de cada cambio visible y la lista **"para tu
+  ojo"**: lo que necesita a la persona, en orden de importancia.
+- Respondé las cinco preguntas, con nombre y apellido:
+  1. **Escapes**: por cada uno, qué revisor o chequeo debió cazarlo y qué línea
+     o qué chequeo lo caza ahora.
+  2. **Falsos positivos**: qué encargo o chequeo los indujo.
+  3. **Chequeos dormidos**: los que no dispararon acá ni en las dos corridas
+     anteriores de la bitácora. Al tercero, se borran con constancia.
+  4. **Técnicas nuevas**: lo que hubo que averiguar a mano.
+  5. **Revisores flojos**: quién entregó poco, y qué le faltaba al encargo.
+- **Aplicá los cambios, no los propongas.** Cada aprendizaje va a uno de dos
+  lugares:
+  - **sirve para cualquier app** → esta skill (`medidas.js`, `encargos.md`,
+    `tecnicas.md`, `hig.md`), con la marca `[caso real, <proyecto>]`;
+  - **es de este proyecto** → `.claude/revision/reglas.md` del proyecto, en la
+    tabla regla / qué la hace cumplir.
+- Una corazonada no es un chequeo: va a la bitácora como hipótesis y espera a
+  repetirse.
+- Agregá la entrada a `references/bitacora.md`. Si se editó la skill de forma
+  importante, corré sus evals (`evals/playbook.md` en el repo de la skill).
 
 ## Criterio de salida
 
-La revisión se cierra cuando **todas** estas son ciertas:
-
-- Los revisores corrieron y entregaron, o se documentó cuáles no y por qué.
+- La medición corrió entera y la última vuelta está en el informe.
+- Los revisores entregaron, o está escrito cuáles no y por qué.
 - Todo hallazgo tiene veredicto. Ninguno quedó en "habría que ver".
-- Los cajones 1 y 2 están vacíos.
-- El cajón 3 y los de gusto están en el informe, no en tu memoria.
-- Los tests pasan y hay más que al empezar.
-- Nada del sitio se ve como si lo hubiera decidido el navegador.
-- **El paso 7 está hecho: la bitácora tiene la entrada nueva y los encargos
-  cambiaron, aunque sea para borrar algo.** Una corrida que no cambió nada de la
-  skill casi siempre es una corrida en la que no se miró.
-
-La regla de fondo, por si alguna fase deja duda: **no se termina cuando
-funciona, se termina cuando nada parece accidental**. Un valor que no se
-eligió, un control que dibujó el sistema, dos cosas parecidas que no son
-iguales: cada uno es una novatada que un cliente nota sin saber nombrarla.
-
-## Qué no arreglar por tu cuenta
-
-Un titular, el tono de un botón, un color de marca fuera de paleta, el nombre de
-una sección. Eso se **reporta** con el motivo y se deja como está. La web es de quien la encargó:
-una decisión de gusto tomada sin preguntar es otra forma de novatada.
+- Los cajones 1 y 2 están vacíos, o lo que queda tiene motivo escrito.
+- Los tests pasan y hay más que al empezar; las funciones del mapa andan.
+- Ningún componente tiene más formas que las que el adaptador permite, y
+  ninguno cambia según el sistema.
+- El paso 8 está hecho: la bitácora tiene la entrada y la skill o el adaptador
+  cambiaron, aunque sea para borrar algo. Una corrida que no cambió nada casi
+  siempre es una corrida en la que no se miró.

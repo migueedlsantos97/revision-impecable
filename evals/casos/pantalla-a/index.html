@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Existencias</title>
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--ink:#17181a;--ink2:#4a4d52;--line:#d9dbe0;--accent:#b3122f}
+[data-theme=dark]{--bg:#101113;--card:#1b1c1f;--ink:#f1f2f4;--ink2:#b4b7bd;--line:#33353a;--accent:#ff5470}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:64px;background:var(--card);border-bottom:1px solid var(--line)}
+.tema{min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:22px;background:none;color:var(--ink);font:inherit;padding:0 14px}
+h1{font-size:22px;margin:20px 16px 8px}
+.card{margin:12px 16px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tools{display:flex;gap:10px;padding:12px;flex-wrap:wrap;align-items:center}
+.tools select{height:44px;font:inherit;padding:0 10px}
+.refrescar{width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink);font:inherit;cursor:pointer}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{text-align:left;padding:12px;border-top:1px solid var(--line)}
+td{font-size:11px;color:var(--ink2)}
+td b{font-size:17px;color:var(--ink)}
+th{font-size:13px;color:var(--ink2)}
+.cant{font-size:17px;color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <strong>TALLER · Existencias</strong>
+  <span>
+    <button class="tema" type="button" aria-label="Cambiar tema" onclick="cambiaTema()">Tema</button>
+    <button class="tema" type="button" aria-label="Modo oscuro" onclick="cambiaTema()">Oscuro</button>
+  </span>
+</header>
+<h1>3 perfiles están por debajo del mínimo.</h1>
+<section class="card">
+  <div class="tools">
+    <select aria-label="Serie"><option>Serie: todas</option><option>Serie 20</option><option>Serie 25</option></select>
+    <button class="refrescar" type="button" aria-label="Actualizar">↻</button>
+  </div>
+  <table>
+    <thead><tr><th>Perfil</th><th>Color</th><th>Ubicación</th><th>Stock</th></tr></thead>
+    <tbody>
+      <tr><td><b>216</b> Serie 20 · Enganche central</td><td>Anodizado</td><td>S/D FM-2</td><td class="cant">6 u.</td></tr>
+      <tr><td><b>202</b> Serie 20 · Lateral de hoja</td><td>Anodizado</td><td>S/D E-6</td><td class="cant">4 u.</td></tr>
+      <tr><td><b>205</b> Serie 20 · Lateral de marco</td><td>Negro</td><td>A-5</td><td class="cant">2 u.</td></tr>
+    </tbody>
+  </table>
+</section>
+<script>
+function cambiaTema(){var h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark'}
+</script>
+</body>
+</html>

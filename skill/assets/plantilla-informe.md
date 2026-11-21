@@ -1,6 +1,6 @@
 # Revisión impecable — <proyecto>
 
-**Fecha**: <fecha> · **Revisó**: Claude Code · **Estado del sitio**: <en desarrollo / preview / producción>
+**Fecha**: <fecha> · **Revisó**: Claude Code · **Modo**: <acompañado / noche> · **Rama**: `<revision/fecha>`
 
 > Este informe tiene que entenderse solo. Quien lo abra dentro de seis meses, sin
 > haber estado en la sesión, tiene que saber qué se revisó, qué se encontró y qué
@@ -13,15 +13,26 @@ pendiente de decisión de la persona. Nada de adjetivos.>
 
 | | |
 |---|---|
-| Revisores que corrieron | <N de 11> |
+| Revisores que corrieron | <N de 7> |
+| Fallas medidas | <primera vuelta> → <última vuelta> |
+| Vueltas | <N> |
 | Hallazgos confirmados | <N> |
 | Descartados al refutar | <N> |
 | Arreglados | <N> |
-| Quedaron a criterio del cliente | <N> |
+| Para tu ojo | <N> |
 | Tests | <antes> → <después> |
 | Escapes de la revisión anterior | <N> |
 
-## Lo que le costaba la venta
+## Para tu ojo
+
+<Lo que necesita a la persona, ordenado por importancia. Primero los rediseños y
+las decisiones de gusto que se tomaron solos. Cada uno con captura de antes y
+después y el commit para revertirlo si no convence.>
+
+| Qué | Antes / después | Por qué así | Commit |
+|---|---|---|---|
+
+## Lo que le costaba al usuario
 
 | Qué se rompía | Dónde | Veredicto | Estado |
 |---|---|---|---|
@@ -36,10 +47,10 @@ pendiente de decisión de la persona. Nada de adjetivos.>
 
 <Lista corta. Lo que se arregló y lo que se dejó, con el motivo.>
 
-## Lo que quedó a criterio del cliente
+## Decisiones de gusto
 
-<Decisiones de gusto, no errores. Cada una con qué se podría cambiar, por qué no
-lo toqué, y qué opciones hay. Esto no se arregla sin que lo pida quien encargó el sitio.>
+<En modo acompañado: lo que no se tocó, con qué se podría cambiar y qué opciones
+hay. En modo noche: lo que se decidió solo, con la regla que se aplicó.>
 
 ## Lo que se descartó
 
@@ -63,10 +74,10 @@ próxima revisión sea mejor que esta.>
 
 **Escapes de la revisión anterior**
 
-| Qué se escapó | Qué encargo debió cazarlo | Por qué no lo hizo | Qué línea lo caza ahora |
+| Qué se escapó | Qué revisor o chequeo debió cazarlo | Por qué no lo hizo | Qué chequeo o línea lo caza ahora |
 |---|---|---|---|
 
-**Qué cambió en la skill después de esta corrida**
+**Qué cambió en la skill (general) y en el adaptador (del proyecto)**
 
 - Agregado: <qué check, en qué archivo, aprendido de qué>
 - Afinado: <qué check estaba mal redactado y cómo quedó>

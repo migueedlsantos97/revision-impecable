@@ -1,15 +1,51 @@
 # Revisión impecable
 
-Una skill para Claude Code que revisa una web antes de que la vea el cliente.
+Una skill para Claude Code que revisa, prueba y deja impecable cualquier web o
+app andando. Como tener un equipo de testers, diseñadores y programadores
+revisando todo, incluso de noche, mientras dormís.
 
-No es un linter ni una lista de buenas prácticas. Es un procedimiento que
-despacha **once revisores especializados en paralelo**, obliga a **refutar cada
-hallazgo** antes de aceptarlo, los ordena por **lo que le cuesta la venta**, y
-después **se corrige a sí misma** con lo que se le escapó.
+No es un linter ni una lista de buenas prácticas. Es un procedimiento:
 
-Esa última parte es la que importa. Cada revisión termina midiendo su propio
-fracaso y reescribiendo sus propias instrucciones. La skill que usás en el
-proyecto diez no es la que instalaste.
+1. **Mide con un script** lo que no necesita criterio: contraste, tamaño
+   táctil, texto chico, desbordes, recortes, solapes, controles de fábrica,
+   glifos como íconos, foco invisible, tema a medias, errores de consola, y
+   **cuántas formas distintas tiene cada componente en toda la app** (el botón
+   que en cada sistema se ve distinto). En 4 anchos y 2 temas, en minutos.
+2. **Despacha revisores en paralelo** para lo que sí necesita criterio: probar
+   cada función como un usuario (con el dato guardado como prueba), diseño
+   contra las reglas de Apple, teclado y lectores, textos, estados límite,
+   datos y permisos.
+3. **Refuta** cada hallazgo antes de aceptarlo.
+4. **Arregla en el lugar compartido**, para que el cambio valga en todas las
+   pantallas y todos los sistemas, y vuelve a medir todo.
+5. **Convierte cada error en un chequeo** que falla si vuelve.
+6. **Aprende de lo que se le escapó**, leyendo el historial de git.
+
+## La versión 2
+
+La primera versión despachaba once revisores que medían todo a mano: era
+exhaustiva y lenta. La segunda toma tres ideas de cómo trabaja Lauren Tan
+(poteto) con agentes ([la entrevista](https://www.youtube.com/watch?v=MN9dGgmLyso),
+[sus skills](https://github.com/cursor/plugins/tree/main/pstack)):
+
+- **La verificación es lo primero**: darle al agente manos y ojos para usar la
+  app y ver el resultado. Sin eso no hay loop.
+- **Lo determinístico va a un script**, el criterio queda para los agentes.
+- **Se arregla el entorno, no el caso**: cada error se vuelve estructura
+  (un componente compartido, un chequeo, un test) antes que texto.
+
+Y separa lo general de lo particular: la skill sirve para cualquier proyecto, y
+lo propio de cada uno (cómo se levanta, sus pantallas, sus funciones, sus
+reglas) vive en un **adaptador** dentro de ese proyecto, en
+`.claude/revision/`, que la skill genera la primera vez y mantiene.
+
+El estándar de diseño de base son las Human Interface Guidelines de Apple,
+resumidas en `skill/references/hig.md`.
+
+Tiene un **modo noche**: trabaja sola en una rama, sin preguntar, decide con
+las reglas, rediseña si hace falta, y a la mañana deja un informe con capturas
+de antes y después y la lista de lo que necesita tu ojo. Nunca despliega ni
+toca datos reales.
 
 ## El problema
 
@@ -37,26 +73,16 @@ ruido, no once veces más criterio.
 
 ## Qué revisa
 
-**Sobre el código**
-
-| Revisor | Busca |
-|---|---|
-| Consistencia visual | quince valores donde debería haber cinco |
-| Controles del sistema | lo que dibuja el navegador y no la marca |
-| Contraste y color | razones calculadas, no miradas |
-| Teclado y lectores | lo que no se puede hacer sin mouse |
-| Textos y nomenclatura | dos nombres para la misma cosa |
-| Compatibilidad y Safari | lo que rompe fuera de Chromium |
-
-**Sobre el sitio andando**
-
-| Revisor | Busca |
-|---|---|
-| Anchos y reflujo | el hueco entre breakpoints |
-| Estados límite | vacío, cargando, caído, desbordado |
-| Rendimiento | peso, primer dibujo, gama baja |
-| Conversión y cómo se comparte | qué ve quien llega y quien recibe el link |
-| Dirección de arte | las imágenes como conjunto |
+| | Quién | Busca |
+|---|---|---|
+| 0 | `scripts/medir.py` | todo lo medible, en 390/768/1366/1920 y claro/oscuro, y las formas de cada componente entre pantallas y sistemas |
+| 1 | Funciones | cada función del mapa, de punta a punta, con el efecto real como prueba |
+| 2 | Diseño y consistencia | las capturas contra Apple, las referencias del proyecto y entre sí |
+| 3 | Controles, teclado y lectores | lo que dibuja el sistema y lo que no se puede hacer sin mouse |
+| 4 | Textos | dos nombres para la misma cosa |
+| 5 | Estados límite y anchos | vacío, error, lento, desbordado, entre breakpoints |
+| 6 | Datos, permisos y seguridad | quién puede hacer qué, qué se pierde, qué se duplica |
+| 7 | Web pública (si lo es) | Safari, rendimiento, cómo se comparte, imágenes |
 
 ## Cómo aprende
 
@@ -95,28 +121,31 @@ decoración: dice que esa línea existe porque una vez se pagó por no tenerla.
 
 ## Instalación
 
-Copiá la carpeta `skill/` a tus skills de Claude Code, con el nombre
-`revision-impecable`:
+Cloná el repo y enlazá la carpeta `skill/` en tus skills de Claude Code. Con un
+enlace (y no una copia), `git pull` trae todo lo que la skill aprendió en otra
+máquina:
 
 ```bash
-# Para todos tus proyectos
-cp -r skill ~/.claude/skills/revision-impecable
-
-# Solo para este proyecto
-cp -r skill .claude/skills/revision-impecable
+git clone https://github.com/migueedlsantos97/revision-impecable ~/revision-impecable
+ln -s ~/revision-impecable/skill ~/.claude/skills/revision-impecable
+pip install -r ~/revision-impecable/skill/scripts/requirements.txt
+python -m playwright install chromium
 ```
 
-En Windows, con PowerShell:
+En Windows, con PowerShell (como administrador, o con el modo de desarrollador):
 
 ```powershell
-Copy-Item -Recurse skill "$env:USERPROFILE\.claude\skills\revision-impecable"
+git clone https://github.com/migueedlsantos97/revision-impecable "$env:USERPROFILE\revision-impecable"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\skills\revision-impecable" -Target "$env:USERPROFILE\revision-impecable\skill"
 ```
 
 Se carga en la sesión siguiente. Después alcanza con pedirlo:
 
 > revisá todo antes de mostrárselo al cliente
 
-O invocarla por nombre: `/revision-impecable`.
+O invocarla por nombre: `/revision-impecable`. Para la noche:
+
+> revisá todo y dejalo corriendo toda la noche
 
 ## Qué entrega
 
@@ -143,12 +172,15 @@ saber nombrarla.
 
 ## In English
 
-**Revisión impecable** is a Claude Code skill for the final review of a website
-before a client sees it.
-
-It dispatches eleven specialised reviewers in parallel, requires every finding to
-survive a refutation pass before it is accepted, triages by what actually costs
-the sale, and then rewrites its own instructions based on what it missed.
+**Revisión impecable** is a Claude Code skill that reviews, tests and polishes
+any running web app. A script measures everything mechanical (contrast, touch
+targets, overflow, native controls, focus, half-applied themes, and how many
+shapes each component has across screens and sub-apps); parallel reviewers cover
+what needs judgment, including driving every feature end to end; every finding
+must survive a refutation pass; fixes land in the shared component; and the skill
+rewrites its own checks based on what it missed. Apple's Human Interface
+Guidelines are the default design standard. It can run unattended overnight on a
+branch, never deploying or touching real data.
 
 That last part is the point. Each run measures its own failure — defects found
 *after* the review declared itself done, read straight from git history — and

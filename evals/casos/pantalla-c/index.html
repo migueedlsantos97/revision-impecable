@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Movimientos</title>
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--ink:#17181a;--ink2:#4a4d52;--line:#d9dbe0;--accent:#b3122f;--on-accent:#fff}
+[data-theme=dark]{--on-accent:#101113;--bg:#101113;--card:#1b1c1f;--ink:#f1f2f4;--ink2:#b4b7bd;--line:#33353a;--accent:#ff5470}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 16px;height:64px;background:var(--card);border-bottom:1px solid var(--line)}
+header strong{white-space:nowrap}
+.tema{min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:22px;background:none;color:var(--ink);font:inherit;font-size:15px;padding:0 14px}
+h1{font-size:22px;margin:20px 16px 8px}
+.card{margin:12px 16px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 16px}
+.fila{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.fila:first-child{border-top:0}
+.fila small{display:block;font-size:14px;color:var(--ink2)}
+.btn{min-height:44px;padding:0 18px;border:0;border-radius:10px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:600}
+.pie{padding:12px 16px 24px;display:flex}
+</style>
+</head>
+<body>
+<header>
+  <strong>TALLER · Movimientos</strong>
+  <button class="tema" type="button" aria-label="Cambiar tema" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark'">Tema</button>
+</header>
+<h1>Hoy hubo 2 movimientos.</h1>
+<section class="card">
+  <div class="fila"><span>Recepción perfil 216<small>S/D FM-2 · 09:14</small></span><b>+6 u.</b></div>
+  <div class="fila"><span>Baja perfil 202<small>S/D E-6 · 11:40</small></span><b>−2 u.</b></div>
+</section>
+<div class="pie"><button class="btn" type="button">Registrar movimiento</button></div>
+</body>
+</html>

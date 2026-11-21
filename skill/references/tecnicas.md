@@ -3,6 +3,17 @@
 Lo que varios revisores necesitan. Todo esto da **pruebas**, que es lo único que
 convierte una impresión en un hallazgo.
 
+Casi todo lo mecánico ya lo hace `scripts/medir.py` (y `scripts/medidas.js`, que
+se inyecta en cada página). Lo de abajo es para lo que el script no cubre, para
+confirmar una sospecha a mano, y como receta cuando una técnica nueva merece
+volverse chequeo del script: si la usaste dos veces, pasala a `medidas.js`.
+
+**Marcas para el script.** Un solape, un recorte o un ícono que son a propósito
+se marcan en el HTML con `data-revision-ok="solape"` (o `recorte`, `tactil`,
+`nativo`, `icono`, `glifo`, `texto`, `contraste`, `tema`, o `todo`), y el script
+deja de reportarlos. Cada marca es una decisión: tiene que tener su motivo en
+`reglas.md`.
+
 ## Inventario de valores
 
 Antes de mirar nada, contá. Ajustá las rutas al proyecto.

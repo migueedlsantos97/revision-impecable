@@ -34,6 +34,29 @@ escapes hubo**: defectos que alguien encontró después de que la revisión dijo
 
 ---
 
+## 2026-11-21 — Versión 2 (cambio de procedimiento, no una corrida)
+
+- **Por qué**: la versión 1 era exhaustiva pero lenta, porque cada revisor medía
+  a mano lo mismo que podía medir un script; no probaba las funciones de punta a
+  punta; y no tenía forma de ver que un componente se ve distinto en cada
+  sistema de una misma app.
+- **Cambios a la skill**: `scripts/medir.py` y `scripts/medidas.js` (medición
+  determinística, con foco invisible, tema a medias, contenido recortado y
+  consistencia de componentes entre pantallas y sistemas); once revisores
+  pasan a siete (`encargos.md`: entra Funciones y Datos/permisos; Contraste pasa
+  al script; Compatibilidad, Rendimiento, Conversión y Dirección de arte se
+  juntan en Web pública); `adaptador.md` (lo del proyecto vive en el proyecto);
+  `hig.md` (Apple como estándar de base); `noche.md` (modo autónomo); el paso 7
+  nuevo (fijar como estructura antes que como texto); el paso 8 reparte cada
+  aprendizaje entre la skill y el adaptador. Ninguna línea `[caso real]` se
+  perdió: se movieron a los revisores nuevos.
+- **Evals**: tres páginas sembradas en `evals/`. `medir.py` marca 9 de los 10
+  defectos de las páginas a y b; los dos que quedan son de criterio. Falta la
+  primera vuelta completa con revisores y juez.
+- **Hipótesis**: el inventario de componentes va a encontrar más que el revisor
+  de consistencia de la v1 en apps con varios sistemas; se confirma o se cae en
+  la primera corrida real.
+
 ## 2026-10-07 — Proyecto 2 (plataforma de pedidos de barrio)
 
 Primera corrida en este proyecto: tienda con dos comercios, checkout,

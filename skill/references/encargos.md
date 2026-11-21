@@ -1,22 +1,67 @@
-# Encargos de los once revisores
+# Encargos de los revisores
 
 Cada sección se le pasa **entera** a un revisor, junto con la raíz del proyecto,
-la URL del sitio andando si es de la ronda B, y el contrato de salida de
-`SKILL.md`. Las técnicas que varios comparten están en `tecnicas.md`.
+el `informe.md` de la medición, la carpeta de capturas, el feature map
+(`.claude/revision/funciones/`) y el contrato de salida de `SKILL.md`. Las
+técnicas que varios comparten están en `tecnicas.md`; el estándar de diseño, en
+`hig.md`.
 
 Regla común a todos: **traer la prueba**. El número calculado, la salida del
-comando, el selector que no matchea. Un hallazgo sin prueba es una opinión.
+comando, la captura con su ruta, el dato leído de la base. Un hallazgo sin prueba
+es una opinión.
+
+**No repitas lo que ya midió el script.** Contraste, tamaño táctil, texto chico,
+desbordes, recortes, solapes, controles nativos, glifos, foco invisible, tema a
+medias y variantes de componentes ya están en `informe.md`, con prueba. Tu
+trabajo empieza donde el script no llega: lo que necesita criterio, recorrer
+funciones, forzar estados, leer el código. Si una falla del script te parece
+falsa, decilo con la captura: eso alimenta el paso 8.
+
+**Dónde se arregla.** Para todo hallazgo que se repite, decí el componente, el
+token o la regla compartida donde se arregla **una sola vez** para todas las
+pantallas y sistemas.
 
 **Procedencia.** Los checks que entraron por un escape llevan la marca
-`[de <proyecto>]`. No es decoración: dice que esa línea existe porque una vez se
-pagó por no tenerla, y que borrarla tiene un costo conocido. Los checks sin
-marca son los de origen y se juzgan solo por si disparan.
+`[caso real]` o `[de <proyecto>]`: esa línea existe porque una vez se pagó por no
+tenerla, y borrarla tiene un costo conocido.
 
 ---
 
-## Ronda A — sobre el código
+## 1. Funciones
 
-### 1. Consistencia visual
+Sos el tester. Recorrés **cada función del feature map** como la usaría una
+persona, de punta a punta, con tu propia instancia y tus datos de prueba.
+
+- Por cada función: llegá como dice "Cómo se llega" (para cada rol que la usa),
+  hacela, y comprobá **el efecto real**, no solo la pantalla: la fila en la
+  base, el archivo generado, el stock que bajó, el mensaje que salió. Una
+  pantalla que dice "Listo" con la base igual que antes es el peor defecto.
+- Hacela **dos veces** y con **doble clic**: ¿se duplica? Hacela y volvé atrás
+  con el navegador: ¿queda a medias?
+- Deshacé, anulá, cancelá: ¿vuelve todo a como estaba, incluido lo que tocó en
+  otro sistema?
+- Con un rol que **no** debería poder: ¿se ve el botón? ¿Y si llamás la API
+  directo?
+- Lo que se cruza entre sistemas (una baja que descuenta stock de otro, un
+  pedido que aparece en otro panel): seguilo hasta el otro lado.
+- Si el mapa no alcanza para llegar o los datos de prueba no tienen lo que el
+  recorrido necesita, eso es un hallazgo sobre el adaptador: decilo, no aflojes
+  el recorrido.
+- Al terminar, corré los tests del proyecto y decí qué funciones del mapa **no
+  tienen ningún test** que las toque.
+
+Entregá, además de los hallazgos, la tabla: función / rol / resultado / prueba.
+
+## 2. Diseño y consistencia
+
+Sos el diseñador. Mirás **las capturas** (abrilas, no alcanza con los números) contra `hig.md`, contra las referencias de diseño del proyecto (guía, maquetas, Figma) y **entre sí**: la misma cosa tiene que verse igual en todas las pantallas y en todos los sistemas.
+
+Empezá por la sección "Formas de cada componente" del `informe.md`: cada componente con más de una forma es una decisión olvidada. Elegí la forma que queda (la de las referencias o, si no hay, la más usada que cumpla con Apple), decí a qué valor va cada caso y **en qué archivo compartido se fija** para que no pueda volver a divergir.
+
+Después, la pasada de criterio de `hig.md` pantalla por pantalla: jerarquía, una acción principal, escala de títulos y espacios, alineación, respuesta a cada acción, confirmación de lo destructivo, navegación, estados. Si una pantalla no se arregla de a un detalle, proponé el rediseño completo con la misma solución para todas las que se le parecen.
+
+Lo que viene de la revisión de consistencia de antes:
+
 
 Lo que más delata un sitio hecho sin cuidado son quince valores donde debería
 haber cinco. Contalos antes de mirar nada (ver `tecnicas.md`, "Inventario").
@@ -55,10 +100,36 @@ Buscá:
   renderizando el ícono con dos valores y comparando los PNG. (Proyecto 2: cinco reglas
   muertas, tildes de 1,3px donde se quería 2.)
 
-Proponé la escala corta que reemplaza a lo que encontraste, y a qué valor va
-cada caso.
 
-### 2. Controles del sistema operativo
+Y de contraste, lo que el script no puede calcular solo:
+
+Nunca digas "se ve bien". Calculá la razón con la fórmula de luminancia relativa
+de WCAG (ver `tecnicas.md`) para **cada** color de texto contra **su fondo
+real**, que muchas veces es el de la tarjeta y no el de la página.
+
+- Texto normal 4,5:1. Texto grande (24px, o 19px en negrita) 3:1.
+- Bordes y límites de controles 3:1, pero solo cuando el borde es lo único que
+  dice dónde empieza el control. Si el relleno ya lo distingue, no aplica.
+- **Un cambio de estado se juzga contra su estado anterior**, no contra el
+  fondo. Un borde que pasa de gris claro a gris medio puede dar 2,8:1 entre sí y
+  ser invisible aunque cada uno pase contra el fondo.
+- Los créditos obligatorios por licencia (OpenStreetMap y similares) suelen
+  quedar en gris casi invisible y tienen que leerse.
+- Cuando no llegue, **bajá la luminancia del mismo tono**, no cambies el color.
+
+Revisá también el texto sobre foto: ahí el fondo varía por píxel y hay que
+mirar el peor punto, no el promedio.
+
+- **Los colores literales que conviven con un token variable.** Un marrón fijo
+  puede pasar contra el fondo neutro y fallar contra los cinco valores del
+  token que tiene al lado: el texto de un chip daba 3,20:1 al elegirlo en los
+  cinco temas. Listá cada literal que comparta caja con un `var(--…)` y medilo
+  contra todos los valores de ese token. **[caso real]**
+
+## 3. Controles, teclado y lectores
+
+Es la revisión que más rinde y la que casi nadie hace. El script ya marca los `select`, fechas y casillas de fábrica que se ven y el foco que no se ve; vos mirás el resto de lo que pinta el sistema y todo lo que no se puede hacer sin mouse.
+
 
 Es la revisión que más rinde y la que casi nadie hace. Cada uno de estos lo
 pinta el navegador o el sistema, cambia entre máquinas y rompe la paleta.
@@ -125,32 +196,7 @@ grep -c 'autocomplete="off"' *.html
   corrido o recortado. Y se reubica con `scroll` (en captura), `resize` y
   `visualViewport`, no solo al abrir. (Proyecto 2)
 
-### 3. Contraste y color
-
-Nunca digas "se ve bien". Calculá la razón con la fórmula de luminancia relativa
-de WCAG (ver `tecnicas.md`) para **cada** color de texto contra **su fondo
-real**, que muchas veces es el de la tarjeta y no el de la página.
-
-- Texto normal 4,5:1. Texto grande (24px, o 19px en negrita) 3:1.
-- Bordes y límites de controles 3:1, pero solo cuando el borde es lo único que
-  dice dónde empieza el control. Si el relleno ya lo distingue, no aplica.
-- **Un cambio de estado se juzga contra su estado anterior**, no contra el
-  fondo. Un borde que pasa de gris claro a gris medio puede dar 2,8:1 entre sí y
-  ser invisible aunque cada uno pase contra el fondo.
-- Los créditos obligatorios por licencia (OpenStreetMap y similares) suelen
-  quedar en gris casi invisible y tienen que leerse.
-- Cuando no llegue, **bajá la luminancia del mismo tono**, no cambies el color.
-
-Revisá también el texto sobre foto: ahí el fondo varía por píxel y hay que
-mirar el peor punto, no el promedio.
-
-- **Los colores literales que conviven con un token variable.** Un marrón fijo
-  puede pasar contra el fondo neutro y fallar contra los cinco valores del
-  token que tiene al lado: el texto de un chip daba 3,20:1 al elegirlo en los
-  cinco temas. Listá cada literal que comparta caja con un `var(--…)` y medilo
-  contra todos los valores de ese token. **[caso real]**
-
-### 4. Teclado, foco y lectores
+### Teclado, foco y lectores
 
 - Recorré con Tab. **Toda acción que se hace con el mouse tiene que poder
   hacerse con teclado.** Un `<span onclick>` dentro de un `<button>` no es
@@ -238,7 +284,7 @@ mirar el peor punto, no el promedio.
   `[tabindex="-1"]:focus` a secas pesa mas que `button:focus-visible` y le saca
   el anillo a un boton. **[caso real]**
 
-### 5. Textos y nomenclatura
+## 4. Textos
 
 - **Un nombre por cosa**, en toda la superficie. Revisá interfaz, mensajes
   salientes (WhatsApp, mail) y panel de administración **juntos**. Si en la
@@ -269,26 +315,9 @@ mirar el peor punto, no el promedio.
   rota, con un `ReferenceError`, y vivió tres commits porque ninguna prueba toca
   el render de esa pantalla.
 
-### 6. Compatibilidad y Safari
+## 5. Estados límite y anchos
 
-Casi todo se prueba en Chromium y ahí está el agujero. Revisá en el código qué
-depende de lo que Safari resuelve distinto o tarde:
-
-- `:has()`, `@container`, `:is()` anidado, `text-wrap:balance`.
-- `<dialog>` y `showModal()`, `::backdrop`, `backdrop-filter`.
-- `env(safe-area-inset-*)` y `100dvh` en iPhone con la barra de direcciones.
-- `scrollbar-color` (no lo soporta) frente a `::-webkit-scrollbar` (sí).
-- `inert`, `popover`, `toggleAttribute` con segundo argumento.
-- Formatos de imagen y de fuente, y `font-display`.
-- `Intl.DateTimeFormat` con zonas horarias y `timeZone:'UTC'`.
-- Prefijos que faltan: `-webkit-` en lo que todavía lo pide.
-
-Para cada dependencia decí si hay respaldo y qué se ve si falla. Marcá lo que
-solo se puede confirmar en un iPhone real.
-
----
-
-## Ronda B — sobre el sitio andando
+Trabajás sobre la app andando, con tu propia instancia: vas a forzar errores y vaciar datos. El script ya midió desbordes y recortes en 390, 768, 1366 y 1920; vos probás lo que está entre medio y lo que no es el estado feliz.
 
 - **Todo lo que dependa de los datos regionales del aparato.** `Intl` con
   `style:'currency'` daba `$ 0` en una computadora y `UYU 0` en Chrome de
@@ -297,7 +326,7 @@ solo se puede confirmar en un iPhone real.
   fechas, meses y orden alfabético. Listá cada uso de `Intl` y `toLocale*` y
   decí si el texto exacto importa. **[caso real, dos veces]**
 
-### 7. Anchos y reflujo
+### Anchos y reflujo
 
 Probá 360, 390, 768, 860, 1024, 1280 y 1440. En cada uno, el script de desborde
 de `tecnicas.md`.
@@ -319,7 +348,7 @@ de `tecnicas.md`.
   viewport y se leía como una segunda página. Medí el alto de cada bloque
   grande contra `innerHeight` y decilo cuando lo supere. **[caso real]**
 
-### 8. Estados límite
+### Estados límite
 
 Cada pantalla tiene más de un estado y normalmente solo se diseñó el feliz.
 Forzá y mirá:
@@ -357,7 +386,56 @@ Forzá y mirá:
   eventos son los cuatro estados más fáciles de revisar y los que menos prueban.
   **[caso real]**
 
-### 9. Rendimiento
+## 6. Datos, permisos y seguridad
+
+Leés el código del servidor y probás contra tu instancia. La pregunta es qué
+puede salir mal con los datos de verdad.
+
+- **Permisos.** Por cada acción que cambia datos: ¿el servidor controla el rol,
+  o solo lo esconde la interfaz? Probalo llamando la API con un rol que no
+  debería poder, y sin sesión. **[de un proyecto real]** Tres acciones de
+  registro no exigían sesión: se veían protegidas solo porque el botón no
+  aparecía.
+- **Plata y cantidades.** Redondeos, negativos, decimales con coma, totales que
+  se calculan en dos lugares distintos y no dan lo mismo.
+- **Que nada se pierda.** Borrados sin confirmación ni forma de volver atrás;
+  ediciones concurrentes (dos pestañas): ¿gana la última sin aviso?
+- **Que nada se duplique.** Doble envío, reintento después de un corte, importar
+  dos veces el mismo archivo.
+- **Entradas.** Lo que se escribe en un campo y se muestra en otro lado sin
+  escapar; archivos subidos sin límite de tamaño o tipo; rutas armadas con lo
+  que manda el usuario.
+- **Lo que queda abierto.** Claves o tokens en el código o en los mensajes de
+  error, documentación de la API publicada sin querer, CORS abierto, sesiones
+  que no vencen.
+- **Migraciones y datos viejos.** Si la app abre una base que trae datos de
+  antes, ¿qué pasa con los registros que no tienen los campos nuevos?
+
+Cada sospecha se prueba contra la instancia antes de escribirla: más de una vez
+una "vulnerabilidad" resultó falsa al probarla.
+
+## 7. Web pública (solo si la ve gente de afuera)
+
+Para sitios que se muestran a clientes o al público. En una herramienta interna, este revisor no corre.
+
+### Compatibilidad y Safari
+
+Casi todo se prueba en Chromium y ahí está el agujero. Revisá en el código qué
+depende de lo que Safari resuelve distinto o tarde:
+
+- `:has()`, `@container`, `:is()` anidado, `text-wrap:balance`.
+- `<dialog>` y `showModal()`, `::backdrop`, `backdrop-filter`.
+- `env(safe-area-inset-*)` y `100dvh` en iPhone con la barra de direcciones.
+- `scrollbar-color` (no lo soporta) frente a `::-webkit-scrollbar` (sí).
+- `inert`, `popover`, `toggleAttribute` con segundo argumento.
+- Formatos de imagen y de fuente, y `font-display`.
+- `Intl.DateTimeFormat` con zonas horarias y `timeZone:'UTC'`.
+- Prefijos que faltan: `-webkit-` en lo que todavía lo pide.
+
+Para cada dependencia decí si hay respaldo y qué se ve si falla. Marcá lo que
+solo se puede confirmar en un iPhone real.
+
+### Rendimiento
 
 - Peso total de la primera carga, y qué pesa más. Fuentes, imágenes y bundles
   de 3D son los sospechosos.
@@ -377,7 +455,7 @@ Forzá y mirá:
 - `preload` que no se usa dentro de los primeros segundos es peso al pedo y
   además avisa por consola.
 
-### 10. Conversión, SEO y cómo se comparte
+### Conversión, SEO y cómo se comparte
 
 Mirá la página como quien llega por primera vez y tiene que decidir.
 
@@ -408,7 +486,7 @@ Mirá la página como quien llega por primera vez y tiene que decidir.
   en `google.com/search`: el botón "Cómo llegar" no abría una ruta. Leyendo el
   HTML es invisible. **[caso real]**
 
-### 11. Dirección de arte
+### Dirección de arte
 
 Las imágenes suelen ser la parte más débil y nadie las revisa **como conjunto**.
 
