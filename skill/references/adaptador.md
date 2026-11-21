@@ -67,6 +67,9 @@ ejemplo, configuración local), creá uno **de prueba**, marcado como tal.
 }
 ```
 
+- `arranque.listo_log`: un texto que la instancia escribe cuando terminó de
+  prepararse (por ejemplo, al terminar de sembrar datos). `medir.py` espera a
+  verlo en `instancia.log` antes de medir.
 - `login.tipo` es `api` (POST con el cuerpo del rol) o `pasos` (lista de
   pasos; `{usuario}` y `{clave}` se reemplazan).
 - Pasos: `click`, `fill`, `esperar`, `presionar`, `pausa`, `js`, e `ir` (clic en

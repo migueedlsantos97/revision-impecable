@@ -77,6 +77,14 @@ class Instancia:
         if not _responde(_url(url, self.cfg.get("listo", "/")), espera=float(self.cfg.get("espera", 60))):
             self.__exit__()
             sys.exit("La instancia no quedó lista. Mirá .claude/revision/instancia.log")
+        marca = self.cfg.get("listo_log")
+        if marca:  # why: una instancia con siembra responde antes de terminar de sembrar; medir ahí mide pantallas a medias
+            ruta, fin = self.raiz / ".claude" / "revision" / "instancia.log", time.time() + float(self.cfg.get("espera", 60))
+            while marca not in ruta.read_text(errors="ignore")[-20000:]:
+                if time.time() > fin or self.proc.poll() is not None:
+                    self.__exit__()
+                    sys.exit("La instancia no escribió «%s» en el log a tiempo." % marca)
+                time.sleep(1)
 
     def __exit__(self, *a):
         if self.proc and self.proc.poll() is None:

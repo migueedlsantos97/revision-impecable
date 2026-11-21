@@ -71,6 +71,12 @@ Buscá `.claude/revision/proyecto.json` en la raíz.
 ### 1. Preparar
 
 - Trabajá en una rama `revision/<fecha>` (en modo noche, obligatorio).
+- **Activá los guardrails del repo** si existen y no están activos: un
+  `.githooks/` necesita `git config core.hooksPath .githooks` en cada clone, y
+  los linters que el proyecto corre en CI se corren antes de cada commit. Un
+  commit tuyo no puede saltearse lo que se le exige a una persona. **[caso
+  real]** En la primera corrida v2 un commit pasó con el lint en rojo porque el
+  pre-commit estaba versionado pero no activado en ese clone.
 - Levantá la instancia de **prueba** del adaptador. Corré los tests que ya
   existan y anotá el número: es la línea de base.
 - Leé las reglas del proyecto (`.claude/revision/reglas.md`, `CLAUDE.md`, guías
