@@ -152,7 +152,9 @@ def _contexto(nav, ancho, tema, cfg, estado):
 
 
 FOCO_JS = """(n) => {
-  const firma = (e) => { const s = getComputedStyle(e); return [s.outlineStyle, s.outlineWidth, s.outlineColor, s.boxShadow, s.backgroundColor, s.borderTopColor, s.borderBottomColor, s.color, s.textDecorationLine].join('|'); };
+  const f1 = (e) => { if (!e) return ''; const s = getComputedStyle(e); return [s.outlineStyle, s.outlineWidth, s.outlineColor, s.boxShadow, s.backgroundColor, s.borderTopColor, s.borderBottomColor, s.color, s.textDecorationLine].join('|'); };
+  // why: un input escondido delega el foco en su label o su caja (:has(:focus-visible)); se mira la familia cercana
+  const firma = (e) => [e, e.parentElement, e.parentElement && e.parentElement.parentElement, e.nextElementSibling, e.closest('label')].map(f1).join('#');
   const sel = (e) => { const p = []; for (let x = e, d = 0; x && x.nodeType === 1 && d < 4; x = x.parentElement, d++) { let t = x.tagName.toLowerCase(); if (x.id) { p.unshift(t + '#' + x.id); break; } const c = [...x.classList].slice(0, 2).join('.'); if (c) t += '.' + c; p.unshift(t); } return p.join(' > '); };
   const e = document.activeElement;
   if (!e || e === document.body) return null;
@@ -197,12 +199,15 @@ def _tema_a_medias(claro, oscuro):
 
 
 CLAVES = {
-    "boton": ("alto", "radio", "fuente", "peso", "relleno"),
+    "boton_primario": ("alto", "radio", "fuente", "peso", "relleno"),
+    "boton_secundario": ("alto", "radio", "fuente", "peso", "borde"),
+    "navegacion": ("alto", "radio", "fuente", "peso"),
+    "boton_tarjeta": ("radio", "borde", "sombra"),
     "boton_icono": ("alto", "radio"),
     "campo": ("alto", "radio", "fuente", "borde"),
-    "h1": ("fuente", "peso", "familia"),
-    "h2": ("fuente", "peso", "familia"),
-    "h3": ("fuente", "peso", "familia"),
+    "h1": ("fuente", "peso", "tipografia"),
+    "h2": ("fuente", "peso", "tipografia"),
+    "h3": ("fuente", "peso", "tipografia"),
     "encabezado_tabla": ("fuente", "peso", "color", "fondo"),
     "pestana": ("alto", "radio", "fuente", "peso"),
     "tarjeta": ("radio", "borde", "sombra"),
@@ -240,12 +245,27 @@ def consistencia(componentes, umbrales):
             fallas.append({"tipo": "variantes", "selector": clase,
                            "detalle": "%d formas distintas de %s; las más usadas: %s" % (len(formas), clase, "; ".join(
                                "%s (%d)" % (", ".join("%s %s" % kv for kv in zip(claves, f)), n) for f, n in formas.most_common(3)))})
-        # valores casi iguales: dos decisiones a 1-2 px son una decisión olvidada
-        for k in claves:
-            vals = sorted({v for v in (_num(c[k]) for c in lista) if v is not None})
-            for a, b in zip(vals, vals[1:]):
-                if 0 < b - a <= 2 and k in ("alto", "radio", "fuente"):
-                    fallas.append({"tipo": "casi_iguales", "selector": clase, "detalle": "%s de %s: %g y %g px conviven" % (k, clase, a, b)})
+        # la misma clase CSS con varias formas: el componente no es uno
+        por_familia = defaultdict(list)
+        for c in lista:
+            por_familia[c.get("familia", "")].append(c)
+        for fam, fl in por_familia.items():
+            ff = Counter(tuple(c[k] for k in claves) for c in fl)
+            if len(ff) > 1 and "." in fam:
+                fallas.append({"tipo": "variantes", "selector": "%s %s" % (clase, fam), "detalle": "la misma clase %s se ve de %d formas: %s" % (
+                    fam, len(ff), "; ".join("%s (%d)" % (", ".join("%s %s" % kv for kv in zip(claves, f)), n) for f, n in ff.most_common(3)))})
+            # dentro de un mismo componente, dos valores a 1-2 px son una decisión olvidada
+            for k in claves:
+                vals = sorted({v for v in (_num(c[k]) for c in fl) if v is not None})
+                for a, b in zip(vals, vals[1:]):
+                    if 0 < b - a <= 2 and k in ("alto", "radio", "fuente"):
+                        fallas.append({"tipo": "casi_iguales", "selector": "%s %s" % (clase, fam), "detalle": "%s: %g y %g px conviven" % (k, a, b)})
+        # más de 6 valores de un atributo en una clase de componente no es una escala
+        for k in ("fuente", "radio", "alto"):
+            if k in claves:
+                vals = sorted({v for v in (_num(c[k]) for c in lista) if v is not None})
+                if len(vals) > 6:
+                    fallas.append({"tipo": "escala", "selector": clase, "detalle": "%d valores de %s: %s" % (len(vals), k, ", ".join("%g" % v for v in vals))})
         # la misma forma cambia según el sistema: cada sistema eligió la suya
         dom = defaultdict(Counter)
         for c in lista:
@@ -255,10 +275,10 @@ def consistencia(componentes, umbrales):
             fallas.append({"tipo": "distinto_por_sistema", "selector": clase, "detalle": "cada sistema usa otro %s: %s" % (clase, "; ".join(
                 "%s → %s" % (s, ", ".join("%s %s" % kv for kv in zip(claves, f))) for s, f in sorted(principales.items())))})
         # el mismo rótulo con distinta forma: «Guardar» no puede verse de dos maneras
-        if clase == "boton":
+        if clase.startswith("boton") and clase != "boton_tarjeta":
             por_texto = defaultdict(set)
             for c in lista:
-                if c["texto"]:
+                if c["texto"] and len(c["texto"]) > 2:
                     por_texto[c["texto"].lower()].add(tuple(c[k] for k in claves))
             for t, fs in por_texto.items():
                 if len(fs) > 1:
@@ -304,7 +324,7 @@ def medir(cfg, base, salida, anchos, temas, filtro_sistema=None, filtro_pantalla
                 caps, temas_medidos = [], {}
                 for tema in temas:
                     for ancho in anchos:
-                        if ancho < pan.get("ancho_min", 0):
+                        if ancho < pan.get("ancho_min", 0) or ancho > pan.get("ancho_max", 99999):
                             continue
                         estado = estados.get(pan.get("rol")) if pan.get("rol") else None
                         ctx, movil = _contexto(nav, ancho, tema, cfg, estado)
@@ -324,7 +344,8 @@ def medir(cfg, base, salida, anchos, temas, filtro_sistema=None, filtro_pantalla
                             u = {**umbrales, "tactil": umbrales["tactil"] if movil else (umbrales["tactil_puntero"] or umbrales["tactil"])}
                             r = pg.evaluate(MEDIDAS, u)
                             res = r["fallas"] + [{"tipo": "consola", "selector": "", "detalle": e[:240]} for e in errores]
-                            if ancho == max(a for a in anchos if a >= pan.get("ancho_min", 0)):
+                            validos = [x for x in anchos if pan.get("ancho_min", 0) <= x <= pan.get("ancho_max", 99999)]
+                            if ancho == max(validos):
                                 temas_medidos[tema] = r["tema"]
                                 if tema == temas[0]:
                                     componentes += [{**c, "pantalla": pan["id"], "sistema": pan.get("sistema", "")} for c in r["componentes"]]

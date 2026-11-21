@@ -165,12 +165,17 @@
   }
 
   // 3. glifos y emoji usados como íconos (los dibuja el sistema, cambian entre aparatos)
-  const PICTO = /[☀-➿⬀-⯿\u{1F300}-\u{1FAFF}←-⇿✓✔✖★☆☰]/u;
+  const EMOJI = /\p{Extended_Pictographic}/u;
+  const SIMBOLO = /[☀-➿⬀-⯿←-⇿■-◿✓✔✖★☆☰]/u;
   for (const { e } of textuales) {
     if (ok(e, 'glifo')) continue;
     for (const n of e.childNodes) {
-      if (n.nodeType === 3 && PICTO.test(n.textContent)) {
-        const m = n.textContent.match(PICTO)[0];
+      if (n.nodeType !== 3) continue;
+      const t = n.textContent.trim();
+      // why: una flecha dentro de una frase es tipografía; sola, en un botón o una etiqueta, es un ícono
+      const comoIcono = SIMBOLO.test(t) && (t.replace(/\s/g, '').length <= 2 || (e.closest('button,a,[role=button],[role=tab]') && t.length <= 4));
+      if ((EMOJI.test(t) && !/^[\d#*]+$/.test(t)) || comoIcono) {
+        const m = (t.match(EMOJI) || t.match(SIMBOLO))[0];
         fallas.push({ tipo: 'glifo', selector: selector(e), detalle: '«' + m + '» lo dibuja la fuente del sistema; usar un ícono SVG' });
         break;
       }
@@ -234,20 +239,27 @@
     const s = cs(e), b = e.getBoundingClientRect();
     const bg = rgba(s.backgroundColor);
     return {
-      clase, selector: selector(e), texto: (e.innerText || e.value || e.getAttribute('aria-label') || '').trim().slice(0, 40),
-      alto: Math.round(b.height), radio: s.borderTopLeftRadius, fuente: s.fontSize, peso: s.fontWeight, familia: s.fontFamily.split(',')[0].replace(/["']/g, ''),
+      clase, familia: e.tagName.toLowerCase() + (([...e.classList].filter((c) => !/[:[\]/]/.test(c))[0] || '') ? '.' + [...e.classList].filter((c) => !/[:[\]/]/.test(c))[0] : ''), selector: selector(e), texto: (e.innerText || e.value || e.getAttribute('aria-label') || '').trim().slice(0, 40),
+      alto: Math.round(b.height), radio: s.borderTopLeftRadius, fuente: s.fontSize, peso: s.fontWeight, tipografia: s.fontFamily.split(',')[0].replace(/["']/g, ''),
       relleno: s.paddingLeft + ' ' + s.paddingTop, fondo: bg[3] > 0 ? hex(mezcla(bg, fondo(e.parentElement || e) || [255, 255, 255])) : 'transparente',
       color: hex(rgba(s.color)), borde: s.borderTopWidth !== '0px' && s.borderTopStyle !== 'none' ? s.borderTopWidth + ' ' + hex(rgba(s.borderTopColor)) : 'sin', sombra: s.boxShadow !== 'none' ? 'sí' : 'no',
     };
   };
   const vistos = new Set();
   const anotar = (e, clase) => { if (vistos.has(e) || !rectVisible(e)) return; vistos.add(e); componentes.push(firma(e, clase)); };
-  document.querySelectorAll('button,[role=button],input[type=submit],input[type=button],a').forEach((e) => {
+  const saturado = (c) => { const mx = Math.max(c[0], c[1], c[2]), mn = Math.min(c[0], c[1], c[2]); return c[3] > 0.5 && mx > 0 && (mx - mn) / mx > 0.35; };
+  const activo = (e) => e.matches('[aria-current]:not([aria-current=false]),[aria-selected=true],[aria-pressed=true],[aria-checked=true],.active,.activo,.on,.sel,.is-active');
+  document.querySelectorAll('button,[role=button],[role=tab],input[type=submit],input[type=button],a').forEach((e) => {
     const s = cs(e);
     const pareceBoton = e.tagName !== 'A' || (rgba(s.backgroundColor)[3] > 0 || s.borderTopStyle !== 'none') && parseFloat(s.paddingLeft) >= 6;
-    if (!pareceBoton) return;
-    const soloIcono = !e.innerText.trim();
-    anotar(e, soloIcono ? 'boton_icono' : 'boton');
+    if (!pareceBoton || activo(e)) return; // why: el estado activo es otra cara del mismo botón, no otra forma
+    const b = e.getBoundingClientRect();
+    let clase = 'boton_secundario';
+    if (!e.innerText.trim()) clase = 'boton_icono';
+    else if (e.closest('nav,[role=tablist],[role=navigation],[role=menu]') || e.matches('[role=tab]')) clase = 'navegacion';
+    else if (b.height > 60 || e.innerText.trim().includes('\n')) clase = 'boton_tarjeta';
+    else if (saturado(rgba(s.backgroundColor))) clase = 'boton_primario';
+    anotar(e, clase);
   });
   document.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]),textarea,select,[role=combobox]').forEach((e) => anotar(e, 'campo'));
   document.querySelectorAll('h1,h2,h3').forEach((e) => anotar(e, e.tagName.toLowerCase()));
@@ -269,11 +281,14 @@
   let k = 0;
   for (const e of document.body.querySelectorAll('*')) {
     if (k > 900) break;
-    if (SALTAR.has(e.tagName) || e.closest('svg') || !rectVisible(e)) continue;
+    if (SALTAR.has(e.tagName) || e.closest('svg,[aria-hidden=true]') || !rectVisible(e)) continue;
     const s = cs(e);
     const bg = rgba(s.backgroundColor);
     const tieneTexto = !!rectTexto(e);
+    const bq = e.getBoundingClientRect();
     if (bg[3] === 0 && !tieneTexto) continue;
+    if (!tieneTexto && (bq.width < 24 || bq.height < 24)) continue; // why: puntos y adornos no son superficies
+    if (saturado(bg)) continue; // why: un color de marca o de estado (el botón verde) puede ser el mismo en los dos temas
     muestra[selector(e)] = { fondo: bg[3] > 0 ? hex(bg) : null, color: tieneTexto ? hex(rgba(s.color)) : null, ok: ok(e, 'tema') };
     k++;
   }

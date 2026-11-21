@@ -75,6 +75,12 @@ ejemplo, configuración local), creá uno **de prueba**, marcado como tal.
   lista vacía, el formulario con error. Lo que arranca escondido (`hidden`,
   diálogos, la pantalla de sesión vencida) también va al mapa; si no, nunca se
   mide.
+- `ancho_min` / `ancho_max`: pantallas que solo existen en escritorio o solo en
+  celular (un menú de la barra inferior, un diálogo de arranque del celular).
+- Un aviso que se va solo a los pocos segundos se captura con los pasos justos,
+  sin pausas largas antes de medir; si no, se pierde.
+- En `esperar`, si la navegación de escritorio queda en el DOM oculta en celular,
+  usá `:visible`: `a, b` espera al primero que encuentra aunque no se vea.
 - `sistema` agrupa pantallas para medir la consistencia entre sistemas.
 - Usuarios y claves de prueba nada más. Si el proyecto los genera con un script,
   el adaptador dice cuál y no copia las claves.
