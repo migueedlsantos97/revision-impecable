@@ -2,501 +2,372 @@
 
 Cada sección se le pasa **entera** a un revisor, junto con la raíz del proyecto,
 el `informe.md` de la medición, la carpeta de capturas, el feature map
-(`.claude/revision/funciones/`) y el contrato de salida de `SKILL.md`. Las
-técnicas que varios comparten están en `tecnicas.md`; el estándar de diseño, en
-`hig.md`.
+(`.claude/revision/funciones/`), `cobertura.md` y el contrato de salida de
+`SKILL.md`. Técnicas compartidas: `tecnicas.md`. Estándar de diseño: `hig.md`.
+Números y anchos: `umbrales.md`. Los casos que originaron una regla están
+anonimizados en `ejemplos/casos-reales.md` y se citan como `[caso real #n]`.
 
-Regla común a todos: **traer la prueba**. El número calculado, la salida del
-comando, la captura con su ruta, el dato leído de la base. Un hallazgo sin prueba
-es una opinión.
+Reglas comunes:
 
-**No repitas lo que ya midió el script.** Contraste, tamaño táctil, texto chico,
-desbordes, recortes, solapes, controles nativos, glifos, foco invisible, tema a
-medias y variantes de componentes ya están en `informe.md`, con prueba. Tu
-trabajo empieza donde el script no llega: lo que necesita criterio, recorrer
-funciones, forzar estados, leer el código. Si una falla del script te parece
-falsa, decilo con la captura: eso alimenta el paso 8.
-
-**Dónde se arregla.** Para todo hallazgo que se repite, decí el componente, el
-token o la regla compartida donde se arregla **una sola vez** para todas las
-pantallas y sistemas.
-
-**Procedencia.** Los checks que entraron por un escape llevan la marca
-`[caso real]` o `[de <proyecto>]`: esa línea existe porque una vez se pagó por no
-tenerla, y borrarla tiene un costo conocido.
+- **Traer la prueba**: número calculado, salida de comando, captura con ruta,
+  dato leído. Un hallazgo sin prueba es una opinión.
+- **No repitas lo que ya midió el script** (`informe.md`): contraste calculado
+  contra fondos planos, tamaño táctil, texto chico, desbordes, recortes, solapes,
+  controles nativos visibles, glifos, foco invisible, tema a medias, variantes,
+  y los chequeos de documento, imágenes, campos, estructura y red. Tu trabajo
+  empieza donde el script no llega (criterio, funciones, estados forzados,
+  lectura de código). Si una falla del script te parece falsa, decilo con la captura.
+- **Dónde se arregla**: para todo hallazgo repetido, el componente, token o
+  regla compartida que lo arregla una sola vez.
+- **Un contexto de navegador propio** (perfil/contexto separado). Los que
+  cambian datos, también instancia propia.
+- **Idioma**: los encargos valen para cualquier idioma de interfaz; donde un
+  punto depende del idioma (ortografía, capitalización) se dice.
+- **Procedencia**: `[caso real #n]` marca una línea que existe porque una vez se
+  pagó por no tenerla; borrarla tiene un costo conocido.
+- **Cobertura**: anotá en tu salida a qué filas de `cobertura.md` aportás.
 
 ---
 
-## 1. Funciones
+## 1. Funciones (y formularios, archivos, impresión)
 
 Sos el tester. Recorrés **cada función del feature map** como la usaría una
-persona, de punta a punta, con tu propia instancia y tus datos de prueba.
+persona, de punta a punta, con tu instancia y tus datos.
 
-- Por cada función: llegá como dice "Cómo se llega" (para cada rol que la usa),
-  hacela, y comprobá **el efecto real**, no solo la pantalla: la fila en la
-  base, el archivo generado, el stock que bajó, el mensaje que salió. Una
+- Llegá como dice "Cómo se llega" (para cada rol), hacela y comprobá **el efecto
+  real**: la fila en la base, el archivo generado, el mensaje que salió. Una
   pantalla que dice "Listo" con la base igual que antes es el peor defecto.
-- Hacela **dos veces** y con **doble clic**: ¿se duplica? Hacela y volvé atrás
-  con el navegador: ¿queda a medias?
-- Deshacé, anulá, cancelá: ¿vuelve todo a como estaba, incluido lo que tocó en
-  otro sistema?
-- Con un rol que **no** debería poder: ¿se ve el botón? ¿Y si llamás la API
-  directo?
-- Lo que se cruza entre sistemas (una baja que descuenta stock de otro, un
-  pedido que aparece en otro panel): seguilo hasta el otro lado.
-- Si el mapa no alcanza para llegar o los datos de prueba no tienen lo que el
-  recorrido necesita, eso es un hallazgo sobre el adaptador: decilo, no aflojes
-  el recorrido.
-- Al terminar, corré los tests del proyecto y decí qué funciones del mapa **no
-  tienen ningún test** que las toque.
+- Hacela **dos veces** y con **doble clic**: ¿se duplica? Volvé atrás con el
+  navegador: ¿queda a medias?
+- Deshacé, anulá, cancelá: ¿vuelve todo, incluido lo que tocó en otro sistema?
+- Con un rol que **no** debería poder: ¿se ve el botón? ¿Y llamando la API directo?
+- Lo que cruza sistemas: seguilo hasta el otro lado.
+- Si el mapa o los datos de prueba no alcanzan, es un hallazgo del adaptador:
+  decilo, no aflojes el recorrido. [caso real #37]
+- Al terminar, corré los tests y decí qué funciones del mapa **no tienen test**.
 
-Entregá, además de los hallazgos, la tabla: función / rol / resultado / prueba.
+### Formularios (tabla de casos fijos)
+Para cada formulario, probá estos casos y anotá el resultado:
+
+| Caso | Qué se espera |
+|---|---|
+| Enviar vacío | error por campo, foco al primer error, mensaje propio asociado (`aria-describedby`), sin globo del navegador |
+| 1 carácter / solo espacios | validación coherente con el servidor |
+| Máximo permitido y máximo + 1 | tope visible o error claro; no se corta en silencio |
+| Emoji, acentos, comillas, `<script>`, nombres con apóstrofo | se guarda y se muestra igual, escapado |
+| Pegar (incluido desde una hoja de cálculo) | respeta formato y límites |
+| Enter con el foco en un campo | envía (o no) como espera la persona; nunca envía algo a medias |
+| Doble envío | una sola operación; botón deshabilitado durante el envío |
+| Volver atrás y recargar | no pierde lo escrito sin avisar (`beforeunload` si hay cambios), no reenvía solo |
+| Autocompletado y gestor de contraseñas | `autocomplete` correcto (`email`, `current-password`, `one-time-code`...), `type` e `inputmode` adecuados |
+| Obligatorio | indicado antes de enviar, no solo con el error |
+| Error del servidor tras enviar | el mensaje conserva lo escrito y dice qué hacer |
+
+### Subida y descarga de archivos
+Archivo vacío, sin cabecera, con otro separador y codificación, más largo que
+los topes del servidor, nombre con espacios/unicode, mismo archivo dos veces,
+tipo no permitido, cancelar a mitad, progreso visible, quitar el archivo
+elegido. Si el cliente valida menos que el servidor, la vista previa dice
+"listo" y el envío falla. [caso real #19] Descargas: abrir el archivo generado y
+leerlo (CSV con tildes en una hoja de cálculo, PDF con todas las páginas).
+
+### Impresión y exportes
+Si el mapa lista imprimir/exportar o hay `@media print`: abrir la vista previa de
+impresión (o `emulateMedia('print')`), comprobar que no se cortan tablas ni
+títulos huérfanos, que se ocultan navegación y botones, que el contraste
+sobrevive en blanco y negro y que los enlaces o códigos necesarios se ven. Un
+exporte se abre y se compara contra lo que muestra la pantalla.
 
 ## 2. Diseño y consistencia
 
-Sos el diseñador. Mirás **las capturas** (abrilas, no alcanza con los números) contra `hig.md`, contra las referencias de diseño del proyecto (guía, maquetas, Figma) y **entre sí**: la misma cosa tiene que verse igual en todas las pantallas y en todos los sistemas.
+Sos el diseñador. Mirás **las capturas** (abrilas, no alcanza con números)
+contra `hig.md`, las referencias del proyecto y **entre sí**: la misma cosa se
+ve igual en todas las pantallas y sistemas.
 
-Empezá por la sección "Formas de cada componente" del `informe.md`: cada componente con más de una forma es una decisión olvidada. Elegí la forma que queda (la de las referencias o, si no hay, la más usada que cumpla con Apple), decí a qué valor va cada caso y **en qué archivo compartido se fija** para que no pueda volver a divergir.
+Empezá por "Formas de cada componente" del `informe.md`: cada componente con más
+de una forma es una decisión olvidada. Elegí la forma que queda (la de las
+referencias o la más usada que cumpla con `hig.md`), decí a qué valor va cada
+caso y **en qué archivo compartido se fija**. Después, la pasada de criterio de
+`hig.md` pantalla por pantalla. Si no se arregla de a un detalle, proponé el
+rediseño con la misma solución para todas las parecidas.
 
-Después, la pasada de criterio de `hig.md` pantalla por pantalla: jerarquía, una acción principal, escala de títulos y espacios, alineación, respuesta a cada acción, confirmación de lo destructivo, navegación, estados. Si una pantalla no se arregla de a un detalle, proponé el rediseño completo con la misma solución para todas las que se le parecen.
+Inventario (ver `tecnicas.md`, "Inventario de valores"): radios, trazos,
+tamaños de fuente, espaciados y colores con más de cinco o seis valores. Dos
+valores a 1-2 px son una decisión olvidada.
 
-Lo que viene de la revisión de consistencia de antes:
-
-
-Lo que más delata un sitio hecho sin cuidado son quince valores donde debería
-haber cinco. Contalos antes de mirar nada (ver `tecnicas.md`, "Inventario").
-
-Buscá:
-
-- **Radios, grosores de trazo, tamaños de fuente, espaciados y colores** con más
-  de cinco o seis valores distintos. Dos valores a uno o dos píxeles de
-  distancia no son dos decisiones, son una decisión olvidada.
-- **Excepciones sin motivo escrito.** Un ícono rotado se difumina y pide más
-  trazo; una estrella de seis puntas se empasta y pide menos. Si no podés
-  escribir el motivo, no es excepción: es descuido.
-- **[caso real] Si el sitio tiene temas, variantes o modos, cambialos y mirá
-  qué NO cambia.** El defecto típico no es que falte el token: es que el token
-  existe, lo usan treinta reglas, y otras trece tienen el valor base escrito a
-  mano. El tema se aplica a medias y el resultado se ve peor que si no hubiera
-  tema, porque la mitad de la pantalla contradice a la otra. La técnica está en
-  `tecnicas.md`, "Lo que no cambia al cambiar el tema".
-- **[caso real] Un token derivado se declara donde vive el valor del que
-  depende.** Si el tema redefine `--accent` en `body` y vos declarás
-  `--tinte: color-mix(..., var(--accent), ...)` en `:root`, esa mezcla resuelve
-  con el `--accent` de `:root`, que es siempre el base. El token existe, no da
-  error, y el tema no llega nunca.
-- **Pares que conviven.** Dos botones flotantes que ocupan el mismo lugar de la
-  pantalla y se turnan tienen que ser el mismo botón, no uno tinta y otro
-  violeta. Lo mismo con dos tarjetas hermanas, dos estados de un control, dos
-  encabezados del mismo nivel.
-- **Radios que no son lo que dicen ser.** Un radio de 40px en un control de 50px
-  de alto no es una pastilla; es un rectángulo con las esquinas muy comidas.
-- **Nesting de radios.** El radio interior tiene que ser menor que el exterior
-  menos el padding, o la curva se ve torcida.
-- **[caso real] Una excepción de trazo que no hace nada.** Si el sprite declara
-  `stroke-width="2"` en cada `<symbol>`, ese atributo gana sobre lo que hereda
-  el `<svg class="icon">`, y las reglas CSS que piden 2,5 o 3 no cambian un
-  píxel. Buscá `stroke-width` en el CSS y en el sprite a la vez; se confirma
-  renderizando el ícono con dos valores y comparando los PNG. (Proyecto 2: cinco reglas
-  muertas, tildes de 1,3px donde se quería 2.)
-
-
-Y de contraste, lo que el script no puede calcular solo:
-
-Nunca digas "se ve bien". Calculá la razón con la fórmula de luminancia relativa
-de WCAG (ver `tecnicas.md`) para **cada** color de texto contra **su fondo
-real**, que muchas veces es el de la tarjeta y no el de la página.
-
-- Texto normal 4,5:1. Texto grande (24px, o 19px en negrita) 3:1.
-- Bordes y límites de controles 3:1, pero solo cuando el borde es lo único que
-  dice dónde empieza el control. Si el relleno ya lo distingue, no aplica.
-- **Un cambio de estado se juzga contra su estado anterior**, no contra el
-  fondo. Un borde que pasa de gris claro a gris medio puede dar 2,8:1 entre sí y
-  ser invisible aunque cada uno pase contra el fondo.
-- Los créditos obligatorios por licencia (OpenStreetMap y similares) suelen
-  quedar en gris casi invisible y tienen que leerse.
-- Cuando no llegue, **bajá la luminancia del mismo tono**, no cambies el color.
-
-Revisá también el texto sobre foto: ahí el fondo varía por píxel y hay que
-mirar el peor punto, no el promedio.
-
-- **Los colores literales que conviven con un token variable.** Un marrón fijo
-  puede pasar contra el fondo neutro y fallar contra los cinco valores del
-  token que tiene al lado: el texto de un chip daba 3,20:1 al elegirlo en los
-  cinco temas. Listá cada literal que comparta caja con un `var(--…)` y medilo
-  contra todos los valores de ese token. **[caso real]**
+- **Excepciones sin motivo escrito.** Si no podés escribir el motivo, es descuido.
+- **Si hay temas o modos, cambialos y mirá qué NO cambia** (valores base escritos
+  a mano). [caso real #2] Técnica en `tecnicas.md`.
+- **Un token derivado se declara donde vive el valor del que depende.** [caso real #3]
+- **Pares que conviven** (dos botones flotantes que se turnan, tarjetas
+  hermanas, encabezados del mismo nivel) son el mismo componente.
+- **Radios**: un radio que no es lo que dice ser (pastilla de verdad o no) y
+  radio interior = exterior − relleno.
+- **Una excepción de trazo que no hace nada**: buscá `stroke-width` en el CSS y
+  en el sprite a la vez. [caso real #4]
+- **Contraste que el script no calcula** (fondos con degradado, foto, estados):
+  calculá la razón WCAG (`tecnicas.md`) contra el **fondo real**. Un cambio de
+  estado se juzga contra su estado anterior. Texto sobre foto: el peor punto,
+  no el promedio. Los créditos obligatorios por licencia tienen que leerse.
+  Cuando no llegue, bajá la luminancia del mismo tono. Cada literal que
+  comparte caja con un token variable se mide contra todos sus valores. [caso real #5]
+- **Tablas grandes: sembrá volumen.** 0, 1, 50 y 10 000 filas (si el producto
+  lo admite): cabecera fija, orden y filtro que no se pierden al paginar,
+  scroll horizontal con la primera columna visible, columnas largas truncadas
+  con acceso al texto completo, selección múltiple y acciones en lote, tiempo de
+  render. Una tabla de 10 000 filas que congela la pestaña es un hallazgo del cajón 1.
+- **Gráficos.** El color no es la única señal (patrón, etiqueta o forma);
+  equivalente en tabla o texto; contraste de cada serie contra el fondo;
+  leyenda; tooltip alcanzable con teclado; casos de datos vacíos, un solo
+  punto, valores negativos, escala truncada que exagera, series con 20+ puntos
+  y nombres largos.
 
 ## 3. Controles, teclado y lectores
 
-Es la revisión que más rinde y la que casi nadie hace. El script ya marca los `select`, fechas y casillas de fábrica que se ven y el foco que no se ve; vos mirás el resto de lo que pinta el sistema y todo lo que no se puede hacer sin mouse.
-
-
-Es la revisión que más rinde y la que casi nadie hace. Cada uno de estos lo
-pinta el navegador o el sistema, cambia entre máquinas y rompe la paleta.
+El script marca los controles de fábrica visibles, campos sin nombre y foco que
+no se ve; vos revisás el resto de lo que pinta el sistema y todo lo que no se
+puede hacer sin mouse.
 
 | Qué | Cómo se resuelve |
 |---|---|
-| Barra de desplazamiento | `scrollbar-width` + `scrollbar-color`, y `::-webkit-scrollbar*` de respaldo |
-| Globo de validación ("Completa este campo") **[caso real]** | `novalidate` en el form, `checkValidity()`, escuchar `invalid` con `preventDefault()` y pintar el mensaje propio. Lo escribe el navegador en su idioma y sin voseo, cambia de forma en cada uno, y en el celular queda fuera de pantalla |
-| Casillas y radios | input escondido (`position:absolute;opacity:0;width:1px`) y la caja en un `::before` del label; el foco delegado con `:has(input:focus-visible)` |
-| Flecha del `<select>` | `appearance:none` + chevron SVG por `background-image` |
-| Rectángulo azul al tocar en Android | `-webkit-tap-highlight-color:transparent` |
-| Amarillo del autorrelleno de Chrome | `input:-webkit-autofill{box-shadow:0 0 0 40px <fondo> inset}` |
-| Anillo de foco | `:focus-visible` propio, con `outline-offset` para que caiga sobre el fondo y no sobre el relleno |
-| Triángulo de `<summary>` | `list-style:none` + `::-webkit-details-marker{display:none}` |
-| Selección de texto y cursor | `::selection` y `caret-color` |
-| Viñetas de listas de layout | `list-style:none` |
-| Glifos Unicode como íconos (✦ ★ ☰ ✓) | pasarlos a SVG: caen fuera del subset de la fuente y los resuelve el sistema, así que se ven distinto en Windows, Mac y Android |
-| Resaltado de `::-webkit-search-cancel-button`, spinners de `number`, ícono de `date` | estilarlos o elegir otro tipo de control |
+| Barra de desplazamiento | `scrollbar-width`/`scrollbar-color` y `::-webkit-scrollbar*` de respaldo |
+| Globo de validación del navegador [caso real #38] | `novalidate`, `checkValidity()`, escuchar `invalid` con `preventDefault()` y pintar el mensaje propio (el navegador lo escribe en su idioma y puede quedar fuera de pantalla) |
+| Casillas y radios | input escondido accesible + caja propia; foco con `:has(input:focus-visible)` |
+| Flecha del `<select>` | `appearance:none` + chevron |
+| Rectángulo al tocar en Android | `-webkit-tap-highlight-color` |
+| Amarillo del autorrelleno | `input:-webkit-autofill` con `box-shadow` inset |
+| Anillo de foco | `:focus-visible` propio con `outline-offset` |
+| Triángulo de `<summary>` | `list-style:none` + `::-webkit-details-marker` |
+| Selección y cursor | `::selection`, `caret-color` |
+| Glifos Unicode como íconos | SVG: caen fuera de la fuente y los dibuja el sistema distinto en cada aparato |
+| Cancelar de búsqueda, spinners de `number`, ícono de `date` | estilarlos o elegir otro control |
 
-Mirá también **la fuente de respaldo**: si la familia declarada no carga, ¿con
-qué se ve? Una pila que termina en `serif` a secas deja el sitio en Times.
+Mirá también **la fuente de respaldo**: si la declarada no carga, ¿con qué se
+ve? Una pila que termina en `serif` a secas deja Times.
 
-### **[caso real]** Lo que no se estila: hay que reemplazar el control
+### Controles cuyo panel dibuja el navegador (hay que reemplazarlos)
+| Qué | Única salida |
+|---|---|
+| Lista de un `<select>` | listbox propio: botón + `role="listbox"` + valor en input escondido |
+| Calendario de `<input type="date">` | calendario propio |
+| Sugerencias de autocompletado de otros formularios | `autocomplete="off"` en campos de búsqueda de datos propios [caso real #12] |
 
-La tabla de arriba resuelve el **campo**. Pero hay tres controles cuyo **panel
-desplegable lo dibuja el navegador fuera de la página**, y ahí no llega ningún
-CSS. Se ven de fábrica por más que el campo esté impecable, y solo se arreglan
-no usando el control nativo:
-
-| Qué | Qué se ve | Única salida |
-|---|---|---|
-| La lista de opciones de un `<select>` | el menú del sistema, con su azul de selección | un listbox propio: botón + `<ul role="listbox">`, con el valor en un input escondido |
-| El calendario de un `<input type="date">` | el datepicker del navegador, distinto en cada uno | un calendario propio |
-| Las sugerencias de autocompletado | lo que el navegador guardó de **otros formularios**, datos de cualquier sitio | `autocomplete="off"` en el campo |
-
-Las dos primeras son trabajo de verdad, no una línea de CSS. La tercera sí es
-una línea, y es la que más incomoda: al tocar el buscador aparecían nombres y
-números de otros sitios sobre el panel privado del cliente.
-
-**Cómo se encuentra sin abrir el navegador:**
-
+Se encuentran sin abrir el navegador (ajustá extensiones y framework):
 ```bash
-grep -c '<select\|type="date"\|type="time"\|type="file"' *.html
-grep -c "el('select'\|createElement('select')" *.js
-grep -c 'autocomplete="off"' *.html
+grep -rEc '<select|type="(date|time|file)"' --include=*.{html,js,jsx,tsx,vue,svelte,jinja,erb} .
 ```
+Trampas al construir el reemplazo: el panel se recorta dentro de `overflow` o
+`<dialog>` (usar `popover` o `position:fixed` y reubicar al hacer scroll,
+resize y viewport visual) [caso real #7]; un input escondido no lo valida el
+navegador (validar en código); un valor combinado (día + hora) arma strings
+inválidos si falta una mitad: probar cada mitad sola [caso real #6]; un control
+propio hereda la obligación de **anunciar su valor**, no solo su etiqueta.
 
-**Dos trampas al construir el reemplazo**, las dos costaron una vuelta:
+### Teclado y foco
+- **Recorré con Tab** (el script puede hacer un barrido; lo juzgás vos). Toda
+  acción de mouse se hace con teclado; un `<span onclick>` no es focusable.
+- Orden de tabulación = orden visual; sin tabindex positivo; sin trampas
+  (salvo diálogos, que atrapan y devuelven el foco al disparador); Esc cierra
+  diálogos y menús; flechas en listbox/tabs/menús; el enlace "saltar al
+  contenido" existe si hay navegación repetida.
+- **El foco no se pierde — medí antes de afirmarlo.** Deshabilitar un control
+  enfocado lo conserva; lo pierden **quitar del DOM el nodo enfocado** y
+  **deshabilitar un `<fieldset>` que lo contiene**. [caso real #8] Buscá listas
+  que se redibujan con el foco adentro y diálogos que recalculan botones.
+- **Sondeo periódico**: `setInterval` + `innerHTML` pierde el foco cada N
+  segundos aunque no cambie nada; una región `aria-live` que se redibuja se
+  relee entera. [caso real #10]
+- **Auditá el foco por selector, no mirando** (`:focus` no se pinta en un
+  navegador sin foco de ventana): sacá `:focus` de las reglas, enumerá todo lo
+  enfocable (`a[href], button, input, select, textarea, summary, [tabindex],
+  dialog, [popover]`) y comprobá con `matches()` que alguna regla entera lo
+  alcanza. [caso real #11] Un contenedor con `tabindex="-1"` no lleva anillo;
+  la regla que lo apaga lista etiquetas para no apagar el de un botón.
+- Ningún anillo queda tapado por un degradado o elemento superpuesto.
 
-- **El panel se recorta.** Dentro de un `<dialog>` o de cualquier contenedor con
-  `overflow`, un desplegable posicionado en absoluto queda cortado. Se resuelve
-  con `popover`, que lo manda a la capa superior, posicionándolo a mano.
-- **Un input escondido no lo valida el navegador.** Si el valor vive en un
-  `type="hidden"`, `required` no hace nada y el formulario se envía vacío. Hay
-  que validarlo en el código, que además es lo que corresponde si el formulario
-  ya lleva `novalidate`.
-- **[caso real] El valor combinado también.** Un `datetime-local` reemplazado
-  por día + hora propios arma `"T10:00"` si falta el día, y
-  `new Date(...).toISOString()` tira `RangeError`: el submit muere sin aviso y
-  "Guardar" no hace nada. El nativo devolvía vacío. Probá cada mitad sola. (Proyecto 2)
-- **[caso real] Sin `popover` el respaldo tiene que ser `position:fixed`.** Las
-  coordenadas de `getBoundingClientRect()` son del viewport; si el flotante cae
-  en `position:absolute` dentro de un padre relativo (Safari < 17), aparece
-  corrido o recortado. Y se reubica con `scroll` (en captura), `resize` y
-  `visualViewport`, no solo al abrir. (Proyecto 2)
+### Lectores de pantalla
+- **Anunciá también el éxito**, no solo el error.
+- Errores con `aria-invalid` y `aria-describedby` al mensaje.
+- Una región viva está en el DOM **antes** de escribirle; usar `setTimeout`, no
+  `requestAnimationFrame`. **Las regiones vivas fuera de un `<dialog>` modal
+  están muertas** (`showModal()` vuelve inerte el exterior): medí el árbol de
+  accesibilidad con el diálogo abierto. [caso real #9]
+- `role="grid"` exige `grid > row > gridcell`; si no hay filas, sin roles.
+- El nombre accesible de una casilla en `<label>` es todo el texto del label; un
+  botón anidado se le pega. [caso real #1]
+- `<th scope>`; listas de ítems como `<ul>`; un único `h1` y niveles sin saltos;
+  landmarks (`main`, `nav`); `lang` correcto; imágenes con `alt` que describe la
+  escena (decorativas con `alt=""`).
+- Si es posible, recorré 3 flujos con un lector real (NVDA/VoiceOver) o su
+  árbol de accesibilidad; si no, decí que no se hizo.
 
-### Teclado, foco y lectores
-
-- Recorré con Tab. **Toda acción que se hace con el mouse tiene que poder
-  hacerse con teclado.** Un `<span onclick>` dentro de un `<button>` no es
-  focusable y no responde a Enter.
-- **El foco nunca se puede perder** — pero medí antes de afirmarlo.
-  **[caso real]** Este encargo decía que deshabilitar un control enfocado tira
-  el foco a `<body>` y que el Tab siguiente reinicia desde el tope. Un revisor
-  lo midió en Chrome 152 y es falso: `disabled` y `hidden` conservan el foco, y
-  al caer a `<body>` el navegador guarda el punto de partida secuencial. Los dos
-  casos que **sí** lo pierden son **quitar del DOM el nodo enfocado** y
-  **deshabilitar un `<fieldset>` que lo contiene**. Buscá esos dos: listas que
-  se redibujan enteras con el foco adentro, diálogos que recalculan sus botones
-  después de una acción, y el fieldset del botón de enviar. Movelo antes.
-- **[caso real] Anunciá también el éxito, no solo el error.** Una acción que
-  cambia el estado y solo avisa cuando falla deja a quien no ve la pantalla sin
-  saber si pasó algo. Es el agujero más caro en un panel que se usa a diario.
-- Ningún anillo de foco puede quedar tapado por un degradado, una viñeta o un
-  elemento por encima.
-- Los errores van con `aria-invalid` en el campo y `aria-describedby` al
-  mensaje. Un texto suelto al final del formulario no dice cuál campo falló.
-- Una región viva (`role="status"` / `role="alert"`) tiene que estar **en el DOM
-  antes** de escribirle el texto. Escribir con `hidden` puesto y recién después
-  mostrarla no anuncia nada. Y usá `setTimeout`, no `requestAnimationFrame`: en
-  una pestaña de fondo el frame nunca llega y el aviso queda vacío.
-- `role="grid"` exige `grid > row > gridcell`. Si no hay filas, sacá los roles:
-  una lista de días es una lista.
-- El nombre accesible de una casilla envuelta en `<label>` es **todo** el texto
-  del label. Un botón anidado le pega su texto al control: "Acepto que reciban
-  estos datos para responder mi consulta. Cómo usamos tus datos" se anuncia como
-  una sola frase, y quien no ve la pantalla no sabe que ahí hay un botón.
-- **[caso real] Cuidado con la versión exagerada de ese hallazgo.** Un revisor
-  afirmó que además el botón *marcaba o desmarcaba la casilla*, por estar dentro
-  del label. Es falso: el navegador no dispara la activación del label cuando el
-  clic cae en un descendiente interactivo, y un `<button>` lo es. Se aceptó sin
-  reproducirlo y se reportó como el hallazgo más grave de la revisión. Una
-  afirmación sobre comportamiento del navegador se prueba en el navegador, en
-  dos líneas, antes de escribirla.
-- **[caso real]** Si escondiste el input nativo para dibujar tu propia
-  casilla, el globo de validación del navegador se queda sin dónde anclarse: no
-  puede apuntar a un elemento de 1px. Esconder un control obliga a hacerse cargo
-  de todo lo que el navegador dibujaba sobre él.
-- Nombres accesibles: el texto de un botón anidado se concatena al del control
-  que lo contiene.
-- `<th>` con `scope`. Listas de características como `<ul>`, no como `<div>` de
-  `<span>` con un separador en `::before`.
-
-- **Un control propio que reemplaza a un `<select>` o a un `<input type=date>`
-  hereda la obligación de anunciar su valor, no solo su etiqueta.** Cinco
-  campos del panel se anunciaban "Estado, elegir" y nunca decían qué estaba
-  elegido, porque el `aria-label` tapa el contenido del botón. **[caso real]**
-
-- **Auditá el foco por selector, elemento por elemento, no mirando.** Es la
-  unica forma: `:focus` solo aplica cuando la ventana tiene foco, asi que en un
-  navegador que no esta al frente el anillo no se pinta nunca y el defecto es
-  invisible. El barrido:
-
-  1. Juntar las reglas de foco de la hoja y sacarles el `:focus`.
-  2. Enumerar todo lo enfocable, **incluido lo que recibe foco por codigo**:
-     `a[href], button, input, select, textarea, summary, [tabindex], dialog,
-     [popover]`.
-  3. Por cada elemento, ver si **alguna regla entera** lo alcanza con
-     `element.matches(...)`. Los que no, caen al anillo de fabrica.
-
-  Cuidado al partir selectores por comas: `:is(a,b,c)` las lleva adentro y
-  despedazarlo da un resultado falso. Se prueba la regla completa.
-
-  **[caso real]** Once elementos caian al anillo por defecto en dos vistas: una
-  seccion de 3666px que se enmarcaba entera, cinco dialogos, dos calendarios
-  propios y sus titulos de mes. Ninguno lo vio nadie.
-
-- **[caso real] El sondeo periódico.** Si la app consulta cada N segundos y
-  redibuja con `innerHTML`, el foco se pierde cada N segundos aunque nada haya
-  cambiado. Buscá `setInterval` y los `innerHTML`/`replaceChildren` que llama:
-  no tienen que tocar el DOM si los datos son iguales, y cuando lo tocan
-  devuelven el foco al equivalente. Una lista completa con `aria-live` que se
-  redibuja se relee entera: se anuncia un resumen, no la lista. (Proyecto 2, panel)
-- **[caso real] Las regiones vivas fuera de un `<dialog>` modal están muertas.**
-  `showModal()` vuelve inerte todo lo de afuera, incluido el `#live` del
-  `<body>`. Abrí el diálogo y contá los nodos del árbol de accesibilidad
-  (`page.accessibility.snapshot()`): si `#live` desaparece, cada `announce()`
-  con un diálogo abierto no lo oye nadie. Lo mismo con los toasts. (Proyecto 2: 227
-  nodos con el diálogo contra 1834 sin él.)
-- **Un contenedor que recibe foco por codigo no lleva anillo, pero un control
-  siempre si.** La regla que los apaga tiene que listar las etiquetas:
-  `[tabindex="-1"]:focus` a secas pesa mas que `button:focus-visible` y le saca
-  el anillo a un boton. **[caso real]**
+### Contraste forzado y preferencias del sistema
+Emulá `forced-colors: active` y `prefers-contrast: more`: bordes de controles,
+íconos y foco siguen visibles; nada depende de un fondo que el modo borra. Con
+`prefers-color-scheme: dark`, imágenes y logotipos que no se adaptan, bordes
+que desaparecen y `color-scheme` declarado.
 
 ## 4. Textos
 
-- **Un nombre por cosa**, en toda la superficie. Revisá interfaz, mensajes
-  salientes (WhatsApp, mail) y panel de administración **juntos**. Si en la
-  tarjeta dice "Sólo el espacio" y en el WhatsApp dice "Sólo salón y patio", son
-  dos nombres para lo mismo.
-- **Concordancia de número.** "1 invitados", "1 servicios elegidos". Buscá toda
-  concatenación de un número con un sustantivo.
-- Nada de jerga de sistema en la cara del usuario: "registro web", "formato
-  inválido", "realiza cobros", "operación exitosa".
-- Los `alt` describen la escena, no el tipo de archivo. "Referencia visual de
-  ambientación cálida" no es un alt.
-- **Los valores de los `<option>` tienen que ser exactamente los que acepta el
-  servidor.** Un desplegable que manda `todo` contra una API que espera `todos`
-  deja una operación rota y un mensaje de error que nombra valores que no
-  existen en la pantalla. Comparalos uno por uno contra el validador.
-- `text-transform:capitalize` pone mayúscula en cada palabra, también en las
-  preposiciones: "Setiembre De 2026". Capitalizá la primera letra en el código.
-- Ortografía vigente: "solo" sin tilde, comillas y guiones correctos, sin comas
-  empalmadas.
-- **Datos de contacto**: la dirección, el teléfono y el nombre tienen que ser
-  carácter por carácter los mismos en la página visible, en los datos
-  estructurados y en el perfil de Google. La consistencia es lo que pesa en el
-  paquete local.
-- Promesas que el cliente no confirmó (horarios, qué incluye, plazos) no van.
-- **[caso real] Corré los tests al terminar y decí qué archivos no cubren.** Una
-  pasada de textos anterior cambió `x.guest_count` por la versión con
-  concordancia y se equivocó de variable: dejó una pantalla entera del panel
-  rota, con un `ReferenceError`, y vivió tres commits porque ninguna prueba toca
-  el render de esa pantalla.
+- **Un nombre por cosa**, en interfaz, mensajes salientes (mail, chat) y panel
+  de administración **juntos**.
+- **Concordancia de número**: buscá toda concatenación de un número con un
+  sustantivo ("1 elementos"). Usá la forma plural del idioma (algunos tienen más
+  de dos).
+- Nada de jerga de sistema ("formato inválido", "operación exitosa").
+- Los `alt` describen la escena, no el tipo de archivo.
+- **Los valores de `<option>` son exactamente los que acepta el servidor**:
+  comparalos uno por uno contra el validador. [caso real #32]
+- `text-transform:capitalize` pone mayúscula en cada palabra, también en
+  preposiciones; capitalizá en el código. [caso real #33]
+- Ortografía y tipografía **del idioma de la interfaz** (comillas, guiones,
+  tildes, mayúsculas); en español, "solo" sin tilde y mayúscula solo al principio.
+- **Datos de contacto** idénticos carácter por carácter en la página, los datos
+  estructurados y los perfiles externos.
+- Promesas que nadie confirmó (horarios, plazos, qué incluye) no van.
+- **Idioma y formatos**: fechas dd/mm vs mm/dd, separador decimal y de miles al
+  escribir y al leer, zonas horarias y cambio de horario de verano, orden
+  alfabético con acentos, nombres con apóstrofo o `ñ`, textos un 40 % más largos
+  (seudolocalización: probá `[Ñáéíóú xxxxxxxxx]`), RTL si el producto lo admite.
+  Listá cada uso de `Intl`/`toLocale*` y decí si el texto exacto importa:
+  no se delega en los datos regionales del aparato. [caso real #13]
+- **Corré los tests al terminar y decí qué archivos no cubren**: una pasada de
+  textos puede romper una pantalla sin que nada lo note. [caso real #30]
 
 ## 5. Estados límite y anchos
 
-Trabajás sobre la app andando, con tu propia instancia: vas a forzar errores y vaciar datos. El script ya midió desbordes y recortes en 390, 768, 1366 y 1920; vos probás lo que está entre medio y lo que no es el estado feliz.
-
-- **Todo lo que dependa de los datos regionales del aparato.** `Intl` con
-  `style:'currency'` daba `$ 0` en una computadora y `UYU 0` en Chrome de
-  Android, que no trae los datos de esa región; el agrupamiento de miles tiene
-  la misma dependencia y convierte `45.000` en `45,000`. Vale igual para
-  fechas, meses y orden alfabético. Listá cada uso de `Intl` y `toLocale*` y
-  decí si el texto exacto importa. **[caso real, dos veces]**
+Trabajás con tu instancia: vas a forzar errores y vaciar datos. El script midió
+desbordes y recortes en los anchos base; vos probás lo que está entre medio y
+lo que no es el estado feliz.
 
 ### Anchos y reflujo
-
-Probá 360, 390, 768, 860, 1024, 1280 y 1440. En cada uno, el script de desborde
-de `tecnicas.md`.
-
-- El hueco típico **no está en el móvil**, que siempre se prueba, sino **entre
-  breakpoints**: una grilla de cuatro columnas que a 1280 respira y a 860 deja
-  una columna de 98px con la dirección partida en seis líneas.
-- Probá también **poca altura**: 1366×720 y 1536×735. Un hero de alto fijo se
-  pisa con el contenido.
-- `overflow-x:clip` en el `body` además de recortar impide el desplazamiento
-  programático: cualquier desborde futuro se vuelve contenido inalcanzable. Usá
+Probá los anchos y alturas del barrido de `umbrales.md` con el script de
+desborde de `tecnicas.md`. El hueco típico está **entre breakpoints**. Además:
+- `overflow-x:clip` en `body` impide el desplazamiento programático: usá
   `hidden` o arreglá la causa.
-- Alturas fijas (`min-height` en px) revientan con texto ampliado. Probá zoom de
-  texto al 200% y espaciado de texto.
+- **Zoom de texto al 200 %** y espaciado de texto de WCAG 1.4.12 (interlineado
+  1,5, párrafos 2×, letra 0,12 em, palabra 0,16 em): nada se recorta ni se
+  superpone; alturas fijas en px revientan.
 - Palabras largas sin espacios y nombres de cuarenta caracteres.
-
-- **Un bloque que mide más que la pantalla.** No es desborde horizontal y
-  ningún check lo agarraba: el footer del celular medía 866px contra 812 de
-  viewport y se leía como una segunda página. Medí el alto de cada bloque
-  grande contra `innerHeight` y decilo cuando lo supere. **[caso real]**
+- **Un bloque que mide más que la pantalla** (alto) se mide contra
+  `innerHeight`. [caso real #14]
+- Orientación horizontal en móvil y teclado virtual que tapa el campo activo.
 
 ### Estados límite
-
 Cada pantalla tiene más de un estado y normalmente solo se diseñó el feliz.
-Forzá y mirá:
-
-- **Vacío**: sin resultados, sin datos, primera vez.
-- **Cargando**: ¿hay señal? ¿salta el layout cuando llega el contenido?
-- **Error de red**: cortá la conexión o la API y mirá qué dice y si se puede
-  seguir.
-- **Lento**: 3G simulado. Lo que carga perezoso, ¿avisa o parece roto?
+- **Vacío** (sin resultados, sin datos, primera vez) dice por qué y qué hacer.
+- **Cargando**: ¿hay señal (esqueleto, progreso, botón deshabilitado)? ¿Salta el
+  layout al llegar el contenido? Forzá una demora de 5 s con una ruta
+  interceptada; un spinner que no termina nunca es un hallazgo.
+- **Error de red y de servidor**: offline, timeout, 401, 403, 404, 429, 500,
+  respuesta malformada. Interceptá las rutas y mirá qué dice la pantalla, si se
+  puede reintentar, si lo escrito se conserva y si hay una página 404 propia.
+  **Sin red, lo guardado no puede parecer borrado.** [caso real #17]
+- **Lento**: conexión lenta simulada; lo que carga perezoso, ¿avisa?
 - **Desbordado**: textos larguísimos, muchos elementos, el máximo permitido.
-- **Doble envío**, envío con el formulario a medias, vuelta atrás del navegador
-  después de enviar.
-- **Sin JavaScript**: ¿hay `<noscript>` y dice algo útil?
-- Si hay panel privado: qué pasa al vencer la sesión con el formulario abierto.
-  **[caso real]** El modal de edición quedaba encima del login y la única
-  salida era Cancelar, perdiendo lo escrito. (Proyecto 2)
-- **[caso real] Sin red, lo guardado no puede parecer borrado.** Con el
-  catálogo sin cargar, el carrito decía "Producto que ya no está", total $0, y
-  ofrecía "Quitar". Distinguí "no cargó" de "no existe" en todo lo que se arma
-  cruzando datos guardados con datos de la red. (Proyecto 2)
-- **[caso real] Estados terminales.** Un pedido rechazado o cancelado seguía
-  diciendo "pagás al retirar" y "retirás por la caja". Recorré cada estado
-  final y leé qué instrucciones quedan en pantalla. (Proyecto 2)
-- **Archivos que sube la persona**: vacío, sin cabecera, separado por `;` y en
-  Windows-1252 (así guarda Excel en español), más largo que los topes del
-  servidor. Si el cliente valida menos que el servidor, la vista previa dice
-  "listo" y el envío falla. (Proyecto 2, importador CSV)
-
-- **Las pantallas que arrancan `hidden`.** Un ícono sin dimensionar salió a
-  54×54 en la pantalla de acceso del panel y el revisor nunca la vio, porque
-  está oculta hasta que falla la sesión. Listá todo `[hidden]` y todo
-  `display:none` del HTML, mostralo, y revisalo como cualquier otra pantalla.
-  **[caso real]**
-- **Sembrá el estado antes de mirar.** Contador en cero, lista vacía y día sin
-  eventos son los cuatro estados más fáciles de revisar y los que menos prueban.
-  **[caso real]**
+- **Doble envío**, formulario a medias, vuelta atrás tras enviar.
+- **Sin JavaScript**: `<noscript>` útil donde corresponde.
+- **Sesión vencida con el formulario abierto.** [caso real #16]
+- **Estados terminales**: leé qué instrucciones quedan en pantalla tras un
+  pedido rechazado, cancelado o vencido. [caso real #18]
+- **Movimiento reducido** (`prefers-reduced-motion: reduce`): no quedan
+  animaciones infinitas, autoplay ni parallax; la información no depende de la
+  animación; sin reducción, nada parpadea más de 3 veces por segundo.
+- **Pantallas que arrancan `hidden`**: listá todo `[hidden]` y `display:none`,
+  mostralo y revisalo. [caso real #15]
+- **Sembrá el estado antes de mirar**: contador en cero y lista vacía son los
+  casos que menos prueban. [caso real #24]
 
 ## 6. Datos, permisos y seguridad
 
-Leés el código del servidor y probás contra tu instancia. La pregunta es qué
-puede salir mal con los datos de verdad.
+Leés el código del servidor y del front, y probás contra tu instancia.
 
-- **Permisos.** Por cada acción que cambia datos: ¿el servidor controla el rol,
-  o solo lo esconde la interfaz? Probalo llamando la API con un rol que no
-  debería poder, y sin sesión. **[de un proyecto real]** Tres acciones de
-  registro no exigían sesión: se veían protegidas solo porque el botón no
-  aparecía.
-- **Plata y cantidades.** Redondeos, negativos, decimales con coma, totales que
-  se calculan en dos lugares distintos y no dan lo mismo.
-- **Que nada se pierda.** Borrados sin confirmación ni forma de volver atrás;
-  ediciones concurrentes (dos pestañas): ¿gana la última sin aviso?
-- **Que nada se duplique.** Doble envío, reintento después de un corte, importar
-  dos veces el mismo archivo.
-- **Entradas.** Lo que se escribe en un campo y se muestra en otro lado sin
-  escapar; archivos subidos sin límite de tamaño o tipo; rutas armadas con lo
-  que manda el usuario.
-- **Lo que queda abierto.** Claves o tokens en el código o en los mensajes de
-  error, documentación de la API publicada sin querer, CORS abierto, sesiones
-  que no vencen.
-- **Migraciones y datos viejos.** Si la app abre una base que trae datos de
-  antes, ¿qué pasa con los registros que no tienen los campos nuevos?
+- **Permisos.** Por cada acción que cambia datos: ¿el servidor controla el rol o
+  solo lo esconde la interfaz? Llamá la API con un rol que no debe y sin sesión.
+  [caso real #20]
+- **Plata y cantidades**: redondeos, negativos, decimales con coma, totales
+  calculados en dos lugares que no coinciden.
+- **Que nada se pierda**: borrados sin confirmar ni deshacer; ediciones
+  concurrentes en dos pestañas.
+- **Que nada se duplique**: doble envío, reintento tras un corte, importar dos veces.
+- **Entradas**: lo escrito en un campo y mostrado en otro lado sin escapar;
+  archivos sin límite de tamaño o tipo; rutas armadas con lo que manda el usuario.
+- **Lo que queda abierto**: claves o tokens en el código o en mensajes de error,
+  documentación de API publicada sin querer, CORS abierto, sesiones que no vencen.
+- **Migraciones y datos viejos**: registros sin los campos nuevos.
 
-Cada sospecha se prueba contra la instancia antes de escribirla: más de una vez
-una "vulnerabilidad" resultó falsa al probarla.
+### Seguridad de front
+- XSS: grep de `innerHTML`, `dangerouslySetInnerHTML`, `v-html`, `document.write`,
+  `eval` con datos del usuario o de la API sin sanear.
+- Enlaces con `target="_blank"` sin `rel="noopener"`.
+- Secretos, claves o URLs internas en el bundle o los sourcemaps publicados;
+  tokens de sesión en `localStorage` (preferir cookies `HttpOnly`).
+- Cookies sin `Secure`, `HttpOnly` o `SameSite`; falta de CSP, `X-Content-Type-Options`,
+  `frame-ancestors`; contenido mixto http/https; scripts de terceros sin SRI.
+- Dependencias con vulnerabilidades conocidas (`npm audit`, `pip-audit` o similar).
+- Redirecciones abiertas (`?next=` aceptando cualquier host).
 
-## 7. Web pública (solo si la ve gente de afuera)
+Cada sospecha se prueba contra la instancia antes de escribirla: más de una
+"vulnerabilidad" resultó falsa. [caso real #35]
 
-Para sitios que se muestran a clientes o al público. En una herramienta interna, este revisor no corre.
+## 7. Web pública (solo si la ve gente de afuera: `"publica": true`)
 
-### Compatibilidad y Safari
+En una herramienta interna este revisor no corre.
 
-Casi todo se prueba en Chromium y ahí está el agujero. Revisá en el código qué
-depende de lo que Safari resuelve distinto o tarde:
-
-- `:has()`, `@container`, `:is()` anidado, `text-wrap:balance`.
-- `<dialog>` y `showModal()`, `::backdrop`, `backdrop-filter`.
-- `env(safe-area-inset-*)` y `100dvh` en iPhone con la barra de direcciones.
-- `scrollbar-color` (no lo soporta) frente a `::-webkit-scrollbar` (sí).
-- `inert`, `popover`, `toggleAttribute` con segundo argumento.
-- Formatos de imagen y de fuente, y `font-display`.
-- `Intl.DateTimeFormat` con zonas horarias y `timeZone:'UTC'`.
-- Prefijos que faltan: `-webkit-` en lo que todavía lo pide.
-
-Para cada dependencia decí si hay respaldo y qué se ve si falla. Marcá lo que
-solo se puede confirmar en un iPhone real.
+### Compatibilidad y navegadores
+Corré las pantallas clave en Chromium, Firefox y WebKit (`--motores` si el
+script lo ofrece, o Playwright a mano). Revisá en el código qué depende de lo
+que otros motores resuelven distinto o tarde: `:has()`, `@container`,
+`text-wrap:balance`, `<dialog>`/`::backdrop`/`backdrop-filter`,
+`env(safe-area-inset-*)` y `100dvh`, `scrollbar-color` frente a
+`::-webkit-scrollbar`, `inert`, `popover`, formatos de imagen y fuente,
+`Intl.DateTimeFormat` con zonas, prefijos `-webkit-`. Para cada dependencia: si
+hay respaldo y qué se ve si falla. Marcá lo que solo se confirma en un iPhone real.
 
 ### Rendimiento
-
-- Peso total de la primera carga, y qué pesa más. Fuentes, imágenes y bundles
-  de 3D son los sospechosos.
-- Imágenes: formato, tamaño servido contra tamaño mostrado, `width`/`height`
-  puestos para no saltar el layout, `loading="lazy"` donde corresponde.
-- Fuentes: subset, `font-display`, cuántos archivos.
-- **Lo pesado en gama baja.** Una escena 3D o un mapa pueden ser insufribles en
-  un celular viejo, que es justo el del público. Si no se puede medir en uno
-  real, decilo y proponé el límite (por ejemplo, no cargar la escena por debajo
-  de cierto ancho o con `prefers-reduced-motion`).
-- **[caso real] Las cabeceras de caché.** Un sitio puede pesar poco y aun así
-  hacer trece viajes de ida y vuelta en cada visita. Pedí `Cache-Control` de
-  cada recurso: el default de varias plataformas es `max-age=0,
-  must-revalidate`, que obliga a revalidar hasta las fuentes y las fotos que
-  nunca cambian.
-- Peticiones a terceros: cuántas, a quién, y si el sitio funciona sin ellas.
-- `preload` que no se usa dentro de los primeros segundos es peso al pedo y
-  además avisa por consola.
+- Peso de la primera carga y qué pesa más (fuentes, imágenes, bundles).
+- Imágenes: formato, tamaño servido vs mostrado, `width`/`height`, `loading="lazy"`.
+- Fuentes: subset, `font-display`, cantidad de archivos.
+- **Gama baja**: escenas 3D, mapas y animaciones pesadas; si no se puede medir en
+  un aparato real, decilo y proponé un límite (no cargar por debajo de cierto
+  ancho o con `prefers-reduced-motion`).
+- **Cabeceras de caché** de cada recurso: el default de varias plataformas
+  obliga a revalidar hasta lo que nunca cambia. [caso real #26]
+- Terceros: cuántos, a quién, y si el sitio funciona sin ellos.
+- `preload` que no se usa en los primeros segundos es peso y ruido de consola.
+- Estabilidad: CLS, tareas largas, LCP (ver los tipos del script).
 
 ### Conversión, SEO y cómo se comparte
-
-Mirá la página como quien llega por primera vez y tiene que decidir.
-
-- ¿La primera pantalla dice **qué es, dónde queda y qué hacer**? ¿El llamado a
-  la acción está donde cae el ojo?
-- ¿Cuántas veces se repite el mismo llamado? Siete veces el mismo botón lo
-  vacía de sentido.
-- **Cómo se ve el link al compartirlo**, sobre todo por el canal que usa el
-  negocio. Comprobá la imagen y el texto de Open Graph con el tamaño real, y que
-  las URLs sean absolutas y del dominio definitivo.
-- `canonical`, `og:url`, `robots.txt` y `sitemap.xml` apuntando al dominio real.
-- `noindex` puesto o sacado según corresponda al momento, y dicho explícitamente
-  en el informe.
-- Datos estructurados que validen, **sin marcar reseñas de terceros como
-  propias**: está prohibido por la política de Google y es motivo de acción
-  manual.
-- Título y descripción que nombren categoría y lugar, que es lo que se tipea.
-- ¿Lo que se quiere medir se está midiendo? Si hay analítica, comprobá que
-  carga y que no la bloquea la política de seguridad. **Ojo con la prueba**: ver
-  `tecnicas.md`, "Lo que `curl` no ve".
-- **[caso real] ¿Alguien se entera cuando entra un lead?** El encargo miraba el
-  embudo hasta que la persona envía, y el punto más caro estaba después: una
-  consulta que se guarda y no le avisa a nadie muere si el dueño no abre el
-  panel. Justo la que el diseño quería rescatar.
-
-- **Seguí cada enlace saliente hasta su URL final** con `curl -sLI` y mirá
-  dónde termina. Un `share.google/…` parecía el perfil del negocio y terminaba
-  en `google.com/search`: el botón "Cómo llegar" no abría una ruta. Leyendo el
-  HTML es invisible. **[caso real]**
+- ¿La primera pantalla dice **qué es, dónde/para quién y qué hacer**? ¿Cuántas
+  veces se repite el mismo llamado?
+- **Cómo se ve el link al compartirlo** por el canal que se usa: Open Graph con
+  tamaño real, URLs absolutas del dominio definitivo.
+- `title` único y descriptivo, `meta description`, `canonical`, `og:url`,
+  `robots.txt`, `sitemap.xml`, `lang`, favicon; `noindex` puesto o sacado según
+  el momento y dicho en el informe.
+- Datos estructurados válidos, **sin marcar reseñas de terceros como propias**.
+- Analítica: que cargue y no la bloquee la política de seguridad. Ojo con la
+  prueba: `tecnicas.md`, "Lo que `curl` no ve". [caso real #23]
+- **¿Alguien se entera cuando entra una consulta?** [caso real #21]
+- **Enlaces**: seguí cada enlace saliente hasta su URL final con `curl -sLI`
+  (solo GET/HEAD) [caso real #22]; recorré los internos buscando 404; probá
+  deep links, recarga en una subruta y el botón Atrás en cada pantalla.
 
 ### Dirección de arte
+Las imágenes suelen ser la parte más débil y nadie las revisa **como conjunto**:
+familia (temperatura, luz, encuadre, grano), las que desentonan, stock o demo
+(decir qué foto real falta y dónde), recortes móviles (caras cortadas), texto
+sobre imagen en el peor punto, orden y ritmo de galerías, peso contra tamaño
+mostrado. Termina con una lista: qué foto falta y para qué lugar.
 
-Las imágenes suelen ser la parte más débil y nadie las revisa **como conjunto**.
+---
 
-- ¿Se ven de la misma familia? Temperatura, luz, encuadre, grano.
-- ¿Alguna desentona tanto que parece de otro sitio?
-- ¿Se nota que son de stock o de demo? Si son provisorias, decilo en el informe
-  con qué foto real haría falta en cada lugar.
-- Recortes: ¿qué se pierde en el recorte móvil? ¿queda una cara cortada?
-- ¿El texto encima se lee en el peor punto de la foto?
-- Orden y ritmo: ¿la galería cuenta algo o es una pila?
-- Peso y resolución, contra el tamaño real en pantalla.
+## Superficies no web (API, CLI, escritorio nativo)
 
-Este revisor termina con una lista concreta: qué foto falta y para qué lugar.
+Esta skill maneja un navegador (Playwright): lo que no es web **no** tiene
+medición automática. Si el proyecto es solo API o CLI, el revisor 1 prueba cada
+endpoint/comando contra su especificación (códigos de estado, errores con
+mensaje útil, paginación, idempotencia, límites de tasa, validación de entradas,
+autenticación) y el revisor 6 la seguridad; las categorías 5-7, 11, 14 y 17 de
+`cobertura.md` se marcan N/A con ese motivo. Una app de escritorio nativa o
+móvil nativa queda fuera del alcance: el informe lo declara en "Lo que no se revisó".

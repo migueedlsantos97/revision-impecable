@@ -1,5 +1,7 @@
 # Revisión impecable
 
+[English](README.en.md) · Español
+
 Una skill para Claude Code que revisa, prueba y deja impecable cualquier web o
 app andando. Como tener un equipo de testers, diseñadores y programadores
 revisando todo, incluso de noche, mientras dormís.
@@ -20,6 +22,37 @@ No es un linter ni una lista de buenas prácticas. Es un procedimiento:
    pantallas y todos los sistemas, y vuelve a medir todo.
 5. **Convierte cada error en un chequeo** que falla si vuelve.
 6. **Aprende de lo que se le escapó**, leyendo el historial de git.
+
+## Requisitos
+
+- [Claude Code](https://claude.com/claude-code) (la skill se carga desde `~/.claude/skills/`).
+- Python 3 reciente (se probó con 3.14), `pip` y `git`.
+- Playwright (`pip install -r skill/scripts/requirements.txt`) y un navegador: el Chromium de Playwright
+  (`python -m playwright install chromium`) o, si no lo bajaste, el Chrome instalado en la máquina.
+- Una app que se pueda levantar en local con datos de **prueba** (la skill nunca toca producción).
+- Windows, macOS o Linux.
+
+## Probala en 5 minutos
+
+Hay un proyecto mínimo en [`ejemplos/proyecto-minimo/`](ejemplos/proyecto-minimo/): una página con un botón chico, un
+`<select>` nativo, texto de 12 px y un gris sin contraste. Ya trae su adaptador (`.claude/revision/proyecto.json`).
+
+1. Instalá la skill y las dependencias (sección Instalación, más abajo).
+2. Corré solo la medición, sin Claude, desde la raíz de este repo:
+
+```bash
+python skill/scripts/medir.py --config ejemplos/proyecto-minimo/.claude/revision/proyecto.json --rapido
+```
+
+   Levanta `app.py` en el puerto 8090, abre el navegador sin ventana, mide en 390 y 1366 px, claro y oscuro, y escribe
+   `informe.md`, `informe.json` y capturas en `ejemplos/proyecto-minimo/.claude/revision/salida/<fecha>/`. Esperá
+   cerca de **36 medidas** agrupadas en cuatro defectos (contraste, control nativo, táctil, texto chico). El informe
+   está explicado en [`ejemplos/informe-ejemplo-v2.md`](ejemplos/informe-ejemplo-v2.md).
+3. La revisión completa, con revisores y arreglos: abrí Claude Code **dentro de `ejemplos/proyecto-minimo/`** y pedí
+   `revisá todo` (o `/revision-impecable`). Usa el adaptador que ya está.
+
+En un proyecto propio no hace falta escribir el adaptador a mano: la primera vez la skill lo genera leyendo tu repo
+(`skill/references/adaptador.md`) y te pregunta solo lo que no puede observar.
 
 ## La versión 2
 
@@ -108,7 +141,8 @@ cambios**, no los propone:
 4. Qué técnica hubo que improvisar y debería estar escrita.
 5. Qué revisor entregó poco porque su encargo era vago.
 
-Todo queda en una bitácora que cruza proyectos.
+Lo del proyecto queda en el proyecto. Lo que sirve para cualquier app sube a esta skill **solo con un caso mínimo
+inventado y pasando el filtro de privacidad**: ver [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ### Por qué no se vuelve un monstruo inútil
 
@@ -121,23 +155,37 @@ decoración: dice que esa línea existe porque una vez se pagó por no tenerla.
 
 ## Instalación
 
-Cloná el repo y enlazá la carpeta `skill/` en tus skills de Claude Code. Con un
-enlace (y no una copia), `git pull` trae todo lo que la skill aprendió en otra
-máquina:
+Clonar y **enlazar** la carpeta `skill/` en tus skills de Claude Code. Con un enlace (y no una copia), `git pull` trae
+todo lo que la skill aprendió.
+
+**macOS / Linux**
 
 ```bash
 git clone https://github.com/migueedlsantos97/revision-impecable ~/revision-impecable
+mkdir -p ~/.claude/skills
 ln -s ~/revision-impecable/skill ~/.claude/skills/revision-impecable
 pip install -r ~/revision-impecable/skill/scripts/requirements.txt
 python -m playwright install chromium
 ```
 
-En Windows, con PowerShell (como administrador, o con el modo de desarrollador):
+**Windows, sin administrador (junction), en `cmd`**
+
+```bat
+git clone https://github.com/migueedlsantos97/revision-impecable "%USERPROFILE%\revision-impecable"
+mkdir "%USERPROFILE%\.claude\skills"
+mklink /J "%USERPROFILE%\.claude\skills\revision-impecable" "%USERPROFILE%\revision-impecable\skill"
+pip install -r "%USERPROFILE%\revision-impecable\skill\scripts\requirements.txt"
+python -m playwright install chromium
+```
+
+**Windows con enlace simbólico** (PowerShell como administrador, o con el modo de desarrollador):
 
 ```powershell
-git clone https://github.com/migueedlsantos97/revision-impecable "$env:USERPROFILE\revision-impecable"
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\skills\revision-impecable" -Target "$env:USERPROFILE\revision-impecable\skill"
 ```
+
+**Sin enlaces (cualquier sistema)**: copiá la carpeta `skill/` a `~/.claude/skills/revision-impecable`. Es lo más simple,
+pero para actualizar hay que volver a copiarla.
 
 Se carga en la sesión siguiente. Después alcanza con pedirlo:
 
@@ -146,6 +194,40 @@ Se carga en la sesión siguiente. Después alcanza con pedirlo:
 O invocarla por nombre: `/revision-impecable`. Para la noche:
 
 > revisá todo y dejalo corriendo toda la noche
+
+### Actualizar y desinstalar
+
+- **Actualizar**: `git -C ~/revision-impecable pull` (Windows: `git -C "%USERPROFILE%\revision-impecable" pull`). Con
+  enlace, queda al día en todos tus proyectos. Mirá [`CHANGELOG.md`](CHANGELOG.md) por si cambió el formato del adaptador.
+- **Desinstalar**: quitá el enlace, no el destino: `rm ~/.claude/skills/revision-impecable` (macOS/Linux) o
+  `rmdir "%USERPROFILE%\.claude\skills\revision-impecable"` (Windows; con un junction solo quita el enlace). Después,
+  si querés, borrá el clon. Los adaptadores de tus proyectos (`.claude/revision/`) son tuyos y quedan.
+
+## Qué ejecuta y qué toca
+
+Leelo antes de instalarla: es una skill que **corre código y abre un navegador** sobre tu app.
+
+- **Ejecuta** `skill/scripts/medir.py` (Python + Playwright) y el comando de arranque del adaptador de tu proyecto,
+  para levantar una instancia **de prueba**. Abre un navegador (sin ventana por defecto) y recorre las pantallas del
+  adaptador. Los revisores que despacha Claude leen tu código y manejan esa instancia.
+- **Escribe** solo en tu proyecto: `.claude/revision/` (adaptador y mediciones en `salida/`, que conviene ignorar en
+  git), `docs/revision-<fecha>.md` (el informe) y los arreglos en tu código. En modo acompañado te muestra los cambios
+  de diseño grandes antes de aplicarlos.
+- **Modo noche**: trabaja en una **rama propia**, sin preguntar. Nunca hace push a la rama principal ni `--force`, nunca
+  despliega, nunca escribe en producción, nunca usa datos reales, nunca borra datos de la persona, nunca mata procesos
+  por nombre (solo los que levantó la corrida) y nunca escribe secretos en el repo.
+- **Red**: solo lecturas GET de sitios públicos (enlaces salientes, cabeceras, `robots.txt`). La skill no manda tu código
+  ni tus datos a ningún servicio propio; lo que ve Claude depende de las condiciones que ya tengas en Claude Code.
+- Si tu app solo arranca contra datos reales, la skill **se detiene** y te dice qué falta en vez de inventar.
+
+## ¿Funciona? Los evals
+
+`evals/` tiene dos juegos de casos con defectos sembrados: las tres pantallas originales (`a/b/c`, lo medible) y los
+casos `casos-v2/` D a J (funciones, permisos, teclado y lectores, textos y datos regionales, consistencia entre
+sistemas, web pública y un caso limpio para medir falsas alarmas). Cada caso trae defectos "dorados" que la skill no
+tenía escritos, para medir si **generaliza** y no solo recuerda. La puntuación separa cobertura general, atención a una
+corrección puntual (con y sin pista) y precisión: [`evals/playbook.md`](evals/playbook.md). Todavía no hay una vuelta
+completa registrada sobre los casos v2.
 
 ## Qué entrega
 
@@ -170,26 +252,12 @@ saber nombrarla.
 
 ---
 
-## In English
+La skill está escrita en español, que es el idioma en el que revisa y en el que se invoca
+("revisá todo", "que quede impecable"). English readers: [README.en.md](README.en.md).
 
-**Revisión impecable** is a Claude Code skill that reviews, tests and polishes
-any running web app. A script measures everything mechanical (contrast, touch
-targets, overflow, native controls, focus, half-applied themes, and how many
-shapes each component has across screens and sub-apps); parallel reviewers cover
-what needs judgment, including driving every feature end to end; every finding
-must survive a refutation pass; fixes land in the shared component; and the skill
-rewrites its own checks based on what it missed. Apple's Human Interface
-Guidelines are the default design standard. It can run unattended overnight on a
-branch, never deploying or touching real data.
+## Contribuir, seguridad y licencia
 
-That last part is the point. Each run measures its own failure — defects found
-*after* the review declared itself done, read straight from git history — and
-edits its own checklists accordingly. Checks that never fire for three runs get
-deleted, so it sharpens instead of bloating.
-
-The skill is written in Spanish, which is the language it reviews in. Copy
-`skill/` into `~/.claude/skills/revision-impecable` to install.
-
-## Licencia
-
-MIT. Ver [LICENSE](LICENSE).
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): cómo proponer un check (evidencia reproducible, caso mínimo, sin datos de proyecto).
+- [`SECURITY.md`](SECURITY.md): cómo reportar un problema de seguridad.
+- [`CHANGELOG.md`](CHANGELOG.md): qué cambió entre versiones.
+- MIT. Ver [LICENSE](LICENSE).

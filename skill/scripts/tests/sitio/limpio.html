@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limpio</title>
+<style>
+  body { margin: 0; padding: 16px; font: 16px/1.5 system-ui, sans-serif; color: #111; background: #fff; }
+  button, input { min-height: 48px; font: inherit; padding: 0 16px; }
+  .fila { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+  .corto { width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+<h1>Pantalla limpia</h1>
+<h2>Datos</h2>
+<p>Texto con un <a href="/index.html">enlace en línea</a> y contraste suficiente.</p>
+<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Punto" width="40" height="40">
+<form class="fila" onsubmit="return false">
+  <label for="nom">Nombre</label>
+  <input id="nom" placeholder="Ana">
+  <button type="submit">Guardar</button>
+  <button type="button" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="#111" stroke-width="2"/></svg></button>
+</form>
+<div class="corto" title="Un texto bastante largo que se corta con puntos">Un texto bastante largo que se corta con puntos</div>
+<footer><p>&copy; 2026 Acme&trade;</p></footer>
+</body>
+</html>

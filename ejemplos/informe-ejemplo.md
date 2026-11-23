@@ -1,5 +1,7 @@
 # Revisión impecable — Salón de eventos
 
+> **Ejemplo de la versión 1** (procedimiento con once revisores, anterior a la v2). Se conserva porque muestra la forma del entregable final y el tipo de hallazgo. No muestra la medición con script, el adaptador ni el modo noche: para eso mirá [`informe-ejemplo-v2.md`](informe-ejemplo-v2.md).
+
 **Fecha**: 2026-09-22 · **Revisó**: Claude Code · **Estado del sitio**: preview con `noindex`
 
 > Informe real, anonimizado. Es el primer proyecto donde se usó el procedimiento,

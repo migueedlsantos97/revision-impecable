@@ -13,7 +13,8 @@ pendiente de decisión de la persona. Nada de adjetivos.>
 
 | | |
 |---|---|
-| Revisores que corrieron | <N de 7> |
+| Revisores que corrieron | <N de 7> (el 7 solo si es web pública) |
+| Categorías de cobertura sin marca | 0 |
 | Fallas medidas | <primera vuelta> → <última vuelta> |
 | Vueltas | <N> |
 | Hallazgos confirmados | <N> |
@@ -22,6 +23,43 @@ pendiente de decisión de la persona. Nada de adjetivos.>
 | Para tu ojo | <N> |
 | Tests | <antes> → <después> |
 | Escapes de la revisión anterior | <N> |
+
+## Cobertura
+
+Una fila por categoría de `SKILL.md` paso 3. Ninguna puede quedar vacía.
+
+| # | Categoría | Marca (MEDIDO / REVISADO / N/A) | Quién y prueba, o motivo del N/A |
+|---|---|---|---|
+| 1 | funciones y datos | REVISADO | revisor 1, tabla de funciones |
+| 2 | permisos | | |
+| 3 | formularios y validación | | |
+| 4 | teclado y foco | | |
+| 5 | lector de pantalla y estructura | | |
+| 6 | contraste, color y zoom 200 % | | |
+| 7 | tamaños y reflujo | | |
+| 8 | estados (vacío, carga, error, lento, offline, volumen) | | |
+| 9 | tablas, listas y gráficos | | |
+| 10 | subida y descarga de archivos | | |
+| 11 | tema oscuro, contraste forzado, movimiento reducido | | |
+| 12 | textos, idioma, formatos, zonas horarias | | |
+| 13 | red y seguridad de front | | |
+| 14 | rendimiento y estabilidad de carga | | |
+| 15 | metadatos y cómo se comparte (si es pública) | | |
+| 16 | impresión y exportes | | |
+| 17 | compatibilidad de navegadores | | |
+| 18 | consistencia entre pantallas y sistemas | | |
+| 19 | enlaces, 404, deep links y Atrás | | |
+| 20 | superficies no web (API/CLI) | | |
+
+## Correcciones del usuario
+
+Si la persona señaló defectos concretos durante la corrida. Cada uno es una
+señal más: **no sustituye a la cobertura**. Si no hubo, escribir "ninguna".
+
+| Caso señalado | Clase (genérica) | Instancias halladas / arregladas | Chequeo creado (falla con el defecto) | Clases vecinas miradas (mín. 2) |
+|---|---|---|---|---|
+
+<Si el pedido era solo esto, decirlo: "se corrigió X y su clase; el resto no se revisó".>
 
 ## Para tu ojo
 
@@ -32,18 +70,18 @@ después y el commit para revertirlo si no convence.>
 | Qué | Antes / después | Por qué así | Commit |
 |---|---|---|---|
 
-## Lo que le costaba al usuario
+## Cajón 1 — Lo que le costaba al usuario
 
 | Qué se rompía | Dónde | Veredicto | Estado |
 |---|---|---|---|
 | <qué le pasa a una persona, no qué regla se incumple> | `archivo:línea` | CONFIRMADO | arreglado en `<commit>` |
 
-## Lo que parecía de principiante
+## Cajón 2 — Lo que delataba falta de oficio
 
 | Qué se rompía | Dónde | Veredicto | Estado |
 |---|---|---|---|
 
-## Lo que no nota nadie
+## Cajón 3 — Lo que no nota nadie
 
 <Lista corta. Lo que se arregló y lo que se dejó, con el motivo.>
 
@@ -77,11 +115,12 @@ próxima revisión sea mejor que esta.>
 | Qué se escapó | Qué revisor o chequeo debió cazarlo | Por qué no lo hizo | Qué chequeo o línea lo caza ahora |
 |---|---|---|---|
 
-**Qué cambió en la skill (general) y en el adaptador (del proyecto)**
+**Qué cambió en el proyecto y qué candidatos a la skill se redactaron**
 
-- Agregado: <qué check, en qué archivo, aprendido de qué>
-- Afinado: <qué check estaba mal redactado y cómo quedó>
-- Borrado: <qué check llevaba tres corridas dormido>
+- Agregado en `.claude/revision/` (reglas, tests, adaptador): <qué y aprendido de qué>
+- Afinado: <qué chequeo estaba mal redactado y cómo quedó>
+- Borrado: <qué chequeo llevaba tres corridas dormido>
+- Candidatos a la skill (`.claude/revision/candidatos/`, sin nombres, rutas ni cifras): <lista; no se escribe en la copia instalada>
 
 **Hipótesis abiertas**
 

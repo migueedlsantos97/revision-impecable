@@ -1,230 +1,79 @@
-# Bitácora
+# Cambios de la skill (changelog razonado)
 
-Una entrada por revisión, la más nueva arriba. Es la memoria de la skill entre
-proyectos y la materia prima del paso 7.
+Este archivo registra **cómo evolucionó la skill y por qué**. No describe
+proyectos ni clientes. La bitácora de cada corrida (qué alcance tuvo, cuántos
+hallazgos, qué escapó) vive **en el proyecto revisado**:
+`.claude/revision/bitacora.md`. Los casos que justifican reglas están
+anonimizados en `ejemplos/casos-reales.md`.
 
-La medida de si la skill funciona no es cuántos hallazgos trajo. Es **cuántos
-escapes hubo**: defectos que alguien encontró después de que la revisión dijo
-"listo". Esa es la nota. Si baja corrida tras corrida, la skill está aprendiendo.
+La medida de si la skill funciona no es cuántos hallazgos trajo, sino cuántos
+**escapes** hubo: defectos que alguien encontró después de que la revisión dijo
+"listo". Si bajan corrida tras corrida, la skill aprende.
 
-## Formato
+## Formato de la bitácora de un proyecto (`.claude/revision/bitacora.md`)
 
 ```markdown
-## <fecha> — <proyecto>
-
-- **Alcance**: revisores que corrieron (o "los once").
+## <fecha>
+- **Alcance**: revisores que corrieron y filas de cobertura N/A con motivo.
 - **Hallazgos**: N confirmados, N plausibles, N descartados. Por cajón: N / N / N.
-- **Escapes de la corrida anterior**: N. Uno por línea, con qué encargo debió cazarlo.
-- **Cambios a la skill**: qué se agregó, qué se afinó, qué se borró. Con el archivo.
-- **Hipótesis**: corazonadas sin evidencia suficiente todavía. Esperan repetirse.
-- **Checks dormidos**: los que no dispararon. Al tercero seguido, se borran.
+- **Escapes de la corrida anterior**: uno por línea, con qué chequeo debió cazarlo.
+- **Cambios**: qué se agregó, afinó o borró (en reglas.md, tests o candidatos).
+- **Hipótesis**: corazonadas sin evidencia suficiente todavía.
+- **Chequeos dormidos**: los que no dispararon. Al tercero seguido, se borran.
 ```
 
-## Reglas para escribir acá
+Reglas: con nombre y apellido ("el encargo 3 no decía que un botón dentro de un
+label…", no "faltó revisar el foco"); una corazonada es hipótesis hasta que se
+repite; los chequeos dormidos se borran con constancia; un escape vale más que
+diez hallazgos.
 
-- **Con nombre y apellido.** "Faltó revisar el foco" no sirve. "El encargo 4 no
-  decía que un botón dentro de un label dispara el label" sí.
-- **Una corazonada no es un check.** Va a Hipótesis y espera a que se repita en
-  otro proyecto. Si aparece dos veces, se convierte en línea de encargo.
-- **Los checks dormidos se borran.** Tres corridas sin disparar y afuera, con
-  constancia de por qué. La skill se vuelve inútil por larga mucho antes que por
-  corta. Si el check vuelve a hacer falta, vuelve con evidencia.
-- **Un escape vale más que diez hallazgos.** Es lo único que dice dónde está el
-  agujero real del procedimiento.
+## Cómo sube un aprendizaje a la skill
 
----
+1. Candidato en `.claude/revision/candidatos/<tema>.md` del proyecto, sin
+   nombres de cliente o producto, rutas, URLs, textos de interfaz ni cifras.
+2. Sube solo si se repitió en otro proyecto, o fue un escape real con causa
+   técnica demostrable (especificación, comportamiento del navegador).
+3. Nunca se escribe en la copia instalada de la skill. Se propone por PR al
+   repo: la regla en 1-2 líneas en `references/`, la anécdota anonimizada en
+   `ejemplos/casos-reales.md` con el siguiente número `[caso real #n]`, y una
+   entrada acá.
+4. Antes de subir: releer la regla y preguntarse "¿se entiende y aplica en un
+   proyecto del que no sé nada?". Si no, es del proyecto.
 
-## 2026-11-21 — Versión 2 (cambio de procedimiento, no una corrida)
+## Historial
 
-- **Por qué**: la versión 1 era exhaustiva pero lenta, porque cada revisor medía
-  a mano lo mismo que podía medir un script; no probaba las funciones de punta a
-  punta; y no tenía forma de ver que un componente se ve distinto en cada
-  sistema de una misma app.
-- **Cambios a la skill**: `scripts/medir.py` y `scripts/medidas.js` (medición
-  determinística, con foco invisible, tema a medias, contenido recortado y
-  consistencia de componentes entre pantallas y sistemas); once revisores
-  pasan a siete (`encargos.md`: entra Funciones y Datos/permisos; Contraste pasa
-  al script; Compatibilidad, Rendimiento, Conversión y Dirección de arte se
-  juntan en Web pública); `adaptador.md` (lo del proyecto vive en el proyecto);
-  `hig.md` (Apple como estándar de base); `noche.md` (modo autónomo); el paso 7
-  nuevo (fijar como estructura antes que como texto); el paso 8 reparte cada
-  aprendizaje entre la skill y el adaptador. Ninguna línea `[caso real]` se
-  perdió: se movieron a los revisores nuevos.
-- **Evals**: tres páginas sembradas en `evals/`. `medir.py` marca 9 de los 10
-  defectos de las páginas a y b; los dos que quedan son de criterio. Falta la
-  primera vuelta completa con revisores y juez.
-- **Hipótesis**: el inventario de componentes va a encontrar más que el revisor
-  de consistencia de la v1 en apps con varios sistemas; se confirma o se cae en
-  la primera corrida real.
+### v2.1 — cobertura general y regla de corrección del usuario
+- **Por qué**: la v1 reaccionó a una indicación puntual del usuario revisando
+  solo ese tema y dejó de lado el resto; y varias reglas llevaban anécdotas,
+  nombres y supuestos de stack del proyecto donde nacieron.
+- **Agregado**: paso "Corrección del usuario" (arreglar el caso, barrer su
+  clase, volverlo chequeo, **volver a la cobertura completa**); paso 3
+  "Cobertura sistemática" con `cobertura.md` de 20 categorías que bloquea la
+  salida; encargos nuevos o ampliados (formularios con tabla de casos,
+  teclado, red y fallos, seguridad de front, impresión y exportes, movimiento
+  reducido, contraste forzado y zoom 200 %, tablas grandes, gráficos, subida de
+  archivos, estados de carga, enlaces/404/deep links, superficies no web);
+  `umbrales.md` como tabla única de números, anchos y criterios de parada;
+  "Descubrimiento en 10 minutos" y campos nuevos del adaptador; flujo para que
+  un aprendizaje suba a la skill sin contaminarla; refutador independiente y
+  muestreo con más de 30 hallazgos; glosario ES/EN y descripción bilingüe.
+- **Afinado**: un solo conteo de revisores (siete); numeración de pasos 0-9;
+  cajones con nombre; `doctor` definido; modo noche aborta con informe si no
+  puede construir el adaptador; lecturas GET de sitios públicos permitidas;
+  un contexto de navegador por revisor; encargos independientes del idioma y
+  del stack.
+- **Movido**: todas las anécdotas a `ejemplos/casos-reales.md`; las bitácoras
+  por corrida, al proyecto.
+- **Borrado**: la historia por proyecto que estaba en este archivo.
+- **Hipótesis abiertas**: que la tabla de cobertura reduzca los escapes en
+  categorías que ningún revisor tenía (impresión, movimiento reducido, tablas
+  de volumen); se confirma o cae en las primeras corridas reales.
 
-## 2026-10-07 — Proyecto 2 (plataforma de pedidos de barrio)
+### v2 — medición determinística
+- Script de medición con chequeos de foco, tema, recortes y consistencia entre
+  pantallas; siete revisores en lugar de once; adaptador por proyecto; modo
+  noche; estándar de base en `hig.md`; "fijar como estructura antes que texto".
 
-Primera corrida en este proyecto: tienda con dos comercios, checkout,
-seguimiento y panel del personal con sondeo cada 10 s. Diez revisores para los
-once encargos (7 y 8 los hizo uno solo, en orden, porque son los del navegador).
-
-- **Alcance**: los once.
-- **Hallazgos**: unos 124 reportados. Por cajón, aproximado: 11 / 63 / 38, más
-  12 de gusto o decisión del cliente. Arreglados 74 puntos en tres tandas
-  paralelas (tienda, panel, servidor) sobre archivos separados.
-- **Escapes de la corrida anterior**: no aplica (primera corrida acá). Sí hubo
-  cuatro pasadas de QA manual previas; lo que esta corrida encontró y esas no
-  —regiones vivas inertes bajo un `<dialog>` modal, foco perdido por el
-  sondeo, `stroke-width` del `<symbol>` que anulaba el CSS, el carrito sin red
-  que se presentaba como borrado— es la medida de lo que agrega el procedimiento.
-- **Falsos positivos**: 1 descartado ("9.30" como hora inválida: se normalizaba
-  bien). Cuatro sospechas marcadas "medir en navegador" por revisores de código
-  (regiones vivas, stroke-width, popover, foco del checkout) se confirmaron
-  las cuatro al medir. **Pedirle al revisor de código que diga qué no midió
-  funcionó**: ninguna llegó como certeza falsa.
-- **Cambios a la skill**:
-  - `SKILL.md` paso 1: pedir URL desplegada, iOS mínimo e instancia propia
-    para mutar estado; listar lo que cambió en los últimos commits y dárselo a
-    cada revisor como prioridad (**la hipótesis del proyecto 1 se repitió**: el
-    importador escrito esa mañana juntó ocho hallazgos de cinco revisores).
-  - `SKILL.md` paso 2: 7 y 8 pueden ir a un solo revisor, en orden.
-  - `encargos.md` 1: `stroke-width` en `<symbol>` pisa al CSS.
-  - `encargos.md` 2: valor combinado de fecha+hora propios; respaldo `fixed`
-    sin `popover` y reubicación al desplazar.
-  - `encargos.md` 4: sondeo periódico que redibuja; regiones vivas fuera del
-    `<dialog>` modal.
-  - `encargos.md` 8: sesión vencida que tapa el login, lo guardado sin red
-    presentado como borrado, estados terminales con instrucciones vivas,
-    archivos subidos (vacío, `;`, Windows-1252, topes del servidor).
-  - `tecnicas.md`: comprobar que un glifo está en el `cmap` de la fuente.
-  - **Borrado**: `type="color"` del grep del encargo 2, tres corridas sin
-    disparar. `type="file"` **disparó** esta vez (foto del producto que no se
-    vaciaba al rechazarla) y se queda. `<datalist>`, `type=week` y
-    `<progress>`/`<meter>` tampoco dispararon, pero no figuraban como check
-    escrito en la skill: no hay nada que borrar.
-- **Hipótesis**: que los encargos de código rinden más cuando el sitio tiene
-  estado vivo (sondeo, sesiones, carritos persistidos): el encargo 4 trajo
-  14 hallazgos, el doble que en el proyecto 1. Si se repite, el encargo 4 se
-  parte en "estático" y "app con estado".
-- **Checks dormidos**: dirección de arte no encontró nada sobre consistencia
-  de recortes entre fotos que no estuviera ya en el encargo; ninguno cumple
-  tres corridas todavía.
-
-## 2026-09-26 — Proyecto 1 (salón de eventos)
-
-Segunda corrida completa. La primera con datos sembrados y midiendo en el ancho
-real del telefono de quien revisa el trabajo.
-
-- **Alcance**: los once.
-- **Hallazgos**: 61 confirmados, 9 plausibles, 3 descartados. Por cajon: 14 / 29 / 18.
-- **Escapes de la corrida anterior**: **4**, contra 1 de la vez pasada. La nota
-  empeoro, y el motivo es claro: entre una corrida y la otra se agrego el panel
-  entero y se toco el sitio en 30 commits. Los cuatro escapes:
-  - Dos controles nativos en el panel (encargo 2). No faltaba el check: el test
-    comprobaba 9 tipos en el sitio publico y 2 en el panel. **Una asimetria
-    entre superficies es un agujero, aunque las dos esten cubiertas.**
-  - El footer de 866px contra 812 de pantalla (encargo 7). El encargo pedia
-    desborde horizontal y nadie penso en el vertical.
-  - Un icono a 54x54 en la pantalla de acceso (encargo 8). Esta `hidden`: el
-    revisor nunca la renderizo.
-  - `UYU 0` en Android (ningun encargo). No existia el concepto de "dato que
-    cambia segun los datos regionales del aparato".
-- **Lo que encontro que nadie habia visto**: un arreglo propio de la moneda
-  quedo a mitad -el separador de miles seguia en Intl-; las reglas de cache
-  volvieron a chocar con /vendor por la misma causa que ya se habia arreglado en
-  /assets; los puntos del calendario puestos ese mismo dia eran indistinguibles
-  a 1,03:1; el panel guardaba la fecha de la senia en UTC; la casilla obligatoria
-  solo se pintaba con :has(); y "Como llegar" abria una busqueda de Google.
-- **Falsos positivos**: 3, los tres refutados con prueba. Dos los refuto **el
-  propio revisor que los levanto**, uno con fontTools y otro midiendo los
-  contenedores. El tercero se refuto con un control de sanidad previo, porque
-  el navegador congelaba el foco y sin el control la medicion habria mentido en cualquier direccion.
-- **Cambios a la skill**:
-  - `encargos.md` 3: medir los literales que comparten caja con un token variable
-    contra los cinco valores del token.
-  - `encargos.md` 4: un control propio hereda la obligacion de anunciar su valor.
-  - `encargos.md` 6: listar todo `Intl`/`toLocale*` y decir si el texto exacto importa.
-  - `encargos.md` 7: medir el alto de cada bloque contra el viewport, no solo el ancho.
-  - `encargos.md` 8: renderizar todo lo que arranca `hidden`; sembrar el estado.
-  - `encargos.md` 10: seguir cada enlace saliente hasta su URL final con `curl -sLI`.
-  - `tecnicas.md`: el estado vacio esconde la mitad de los errores; los anchos de
-    prueba se preguntan, no se eligen; los datos regionales cambian segun el aparato.
-- **Hipotesis**: que **el revisor mas util es el que revisa lo que toco quien
-  revisa**. Cinco de los diez hallazgos del primer cajon eran codigo escrito ese
-  mismo dia, incluidos dos arreglos propios incompletos. La corrida anterior
-  no tenia este patron porque revisaba codigo viejo. Si se repite en un tercer
-  proyecto, corresponde un encargo nuevo: "lo que cambio en los ultimos N commits".
-- **Checks dormidos**: `type=color`, `type=file`, `<datalist>`, `type=week` y
-  `<progress>`/`<meter>` no dispararon **ni esta corrida ni la anterior**. Van a
-  la tercera. Si en la proxima siguen mudos, se borran de `NATIVOS`.
-
-## 2026-09-23 — Proyecto 1 (salón de eventos)
-
-Primera corrida del procedimiento completo. Once revisores, dos rondas.
-
-- **Alcance**: los once.
-- **Hallazgos**: 38 confirmados, 4 descartados. Por cajón: 7 / 9 / 22.
-- **Escapes de la corrida anterior**: 1, el globo de validación nativo. Ya
-  incorporado al encargo 2 en la corrida pasada, así que esta vez no hizo falta
-  tocar nada por él.
-- **Lo que encontró que nadie había visto**: una pestaña del panel rota por un
-  `ReferenceError` introducido tres commits antes por la propia pasada de
-  textos; el error crudo del parser de JSON mostrado al cliente al enviar; el
-  titular del hero en celular a 1,64:1; la palabra de acento de cada titular de
-  sección a 1,61:1; el chevron de los `<select>` declarado y nunca pintado.
-- **Falsos positivos**: 4. El más instructivo lo reportaron **dos revisores
-  distintos con la misma prueba equivocada**: `curl` sin cabeceras de navegador
-  no ve el script que el borde inyecta. Otro revisor **refutó su propio
-  encargo** midiendo en el navegador: deshabilitar un control enfocado no
-  pierde el foco en Chrome, y al caer a `<body>` el Tab no reinicia desde el
-  tope.
-- **Cambios a la skill**:
-  - `SKILL.md`: la ronda B se despacha en dos tandas, porque cinco revisores
-    comparten un solo navegador y chocaron en vivo.
-  - `encargos.md` 4: corregida la afirmación sobre el foco al deshabilitar, que
-    era falsa; agregado anunciar el éxito de una acción y no solo el error.
-  - `encargos.md` 5: correr los tests después de la pasada y decir qué archivos
-    no cubren.
-  - `encargos.md` 9: pedir las cabeceras de caché.
-  - `encargos.md` 10: verificar que exista un aviso cuando entra un lead.
-  - `tecnicas.md`: `curl` sin cabeceras de navegador no ve la inyección del
-    borde; el contraste sobre foto se mide sobre las cajas reales del texto.
-- **Hipótesis**: que el valor del procedimiento está sobre todo en los encargos
-  que nunca se corrieron antes. Cinco de los siete hallazgos del primer cajón
-  salieron de estados límite, rendimiento y arte, que no existían en la corrida
-  anterior. Falta un tercer proyecto para saber si se sostiene.
-- **Checks dormidos**: ninguno. Es la segunda corrida; la poda empieza a la
-  tercera.
-
-## <fecha> — Proyecto 1 (salón de eventos)
-
-Entrada cero: la revisión que originó la skill. Se corrió a mano, sin el
-procedimiento todavía escrito, así que sirve de línea de base.
-
-- **Alcance**: tres revisores en paralelo (textos, consistencia visual,
-  accesibilidad) más revisión propia. No existían todavía los encargos de
-  rendimiento, Safari, estados límite, conversión ni dirección de arte.
-- **Hallazgos**: el botón de privacidad dentro del label del consentimiento, los
-  chips de la agenda inalcanzables con teclado, el anillo de foco borrado en los
-  campos de texto, nueve grises por debajo de 4,5:1, el formulario de bloqueo
-  del panel mandando valores que la API no acepta, "Setiembre De 2026", quince
-  radios distintos, cinco grosores de trazo, y el footer estrangulado entre 761
-  y 920px.
-- **Escapes de la corrida anterior**: no aplica, es la primera.
-- **Falso positivo aceptado sin refutar**: **1**, y es el peor error de la
-  corrida. Un revisor afirmó que un botón dentro del `<label>` marcaba o
-  desmarcaba la casilla. Se dio por bueno, se reportó como el hallazgo más grave
-  y recién se probó días después: el navegador no dispara el label para
-  descendientes interactivos, así que la casilla nunca se movía. El arreglo igual
-  correspondía, pero por el nombre accesible, que es bastante menos dramático.
-  Es exactamente lo que el paso 3 existe para evitar, y ocurrió antes de que el
-  paso 3 estuviera escrito.
-- **Escapes de esta corrida**: **1**. El globo de validación nativo del
-  navegador. Lo encontró el cliente mirando una captura, después de que la revisión
-  se dio por cerrada. Ningún encargo hablaba de controles de validación, y el
-  encargo 2 solo listaba los controles de formulario más obvios.
-- **Cambios a la skill**: se creó entera. El escape se incorporó como línea
-  propia en el encargo 2 y se sumó el caso al encargo 4, porque tenía una
-  segunda cara: desde que la casilla se dibuja con un input de 1px escondido, el
-  globo del navegador ya no tenía dónde anclarse.
-- **Hipótesis**: que el entorno de verificación miente más de lo que parece. La
-  pestaña del navegador integrado congela animaciones, `getComputedStyle` y los
-  `IntersectionObserver` cuando la ventana no está al frente, y eso hizo
-  sospechar de tres bugs que no existían. Ya está en `tecnicas.md`; falta
-  confirmar en otro proyecto si aparecen trampas parecidas.
-- **Checks dormidos**: ninguno todavía.
+### v1 — procedimiento completo manual
+- Once revisores sobre una revisión hecha a mano, con rondas paralelas, refutación
+  de hallazgos y aprendizaje por escapes.

@@ -4,10 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Revisión impecable</title>
-<meta name="description" content="Skill para Claude Code que revisa una web antes de que la vea el cliente. Once revisores en paralelo, refutación obligatoria, y un procedimiento que se corrige con lo que se le escapó.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..600;1,6..72,300..500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<meta name="description" content="Skill para Claude Code que revisa una web antes de que la vea el cliente. Siete revisores en paralelo y un script que mide, refutación obligatoria, y un procedimiento que se corrige con lo que se le escapó.">
 <style>
 /* Un solo mundo visual, por decisión: panel de instrumentos. Todo pintado
    explícito, así la página se sostiene sobre cualquier fondo del visor. */
@@ -236,7 +233,7 @@ footer{padding-block:40px 60px;border-top:1px solid var(--hair);font-size:13px;c
 <header class="hero">
   <p class="kicker">SKILL PARA CLAUDE CODE</p>
   <h1>Revisión <em>impecable</em></h1>
-  <p class="claim">Revisa una web antes de que la vea el cliente. Once revisores en paralelo, cada hallazgo tiene que sobrevivir a un intento de refutarlo, y al final <b>la skill se corrige con lo que se le escapó</b>.</p>
+  <p class="claim">Revisa una web antes de que la vea el cliente. Un script que mide y siete revisores en paralelo, cada hallazgo tiene que sobrevivir a un intento de refutarlo, y al final <b>la skill se corrige con lo que se le escapó</b>.</p>
 
   <div class="marcador">
     <span class="n">1</span>
@@ -301,30 +298,26 @@ footer{padding-block:40px 60px;border-top:1px solid var(--hair);font-size:13px;c
 
 <section>
   <div class="marca"><b>02</b><i></i><u>DESPACHO</u></div>
-  <h2 class="col">Once encargos estrechos, a la vez</h2>
-  <p class="lede col">Ninguno ve lo que encontraron los otros. Van en dos rondas porque la segunda necesita el sitio corriendo.</p>
+  <h2 class="col">Siete encargos estrechos, a la vez</h2>
+  <p class="lede col">Antes corre un script que mide lo mecánico (contraste, tamaños, desbordes, foco, consistencia entre pantallas). Los siete revisores quedan para lo que necesita criterio, y ninguno ve lo que encontraron los otros.</p>
 
-  <p class="ronda-tit">RONDA A · SOBRE EL CÓDIGO <i></i></p>
+  <p class="ronda-tit">LÓGICA Y LENGUAJE <i></i></p>
   <ul class="chips" id="ronda-a">
-    <li><b>Consistencia visual</b><span>quince valores donde debería haber cinco</span></li>
-    <li><b>Controles del sistema</b><span>lo que dibuja el navegador y no la marca</span></li>
-    <li><b>Contraste y color</b><span>razones calculadas, no miradas</span></li>
-    <li><b>Teclado y lectores</b><span>lo que no se puede hacer sin mouse</span></li>
+    <li><b>Funciones</b><span>cada función de punta a punta, con el efecto real como prueba</span></li>
+    <li><b>Datos, permisos y seguridad</b><span>quién puede hacer qué, qué se pierde, qué se duplica</span></li>
+    <li><b>Controles, teclado y lectores</b><span>lo que no se puede hacer sin mouse</span></li>
     <li><b>Textos y nomenclatura</b><span>dos nombres para la misma cosa</span></li>
-    <li><b>Compatibilidad y Safari</b><span>lo que rompe fuera de Chromium</span></li>
   </ul>
 
-  <p class="ronda-tit">RONDA B · SOBRE EL SITIO ANDANDO <i></i></p>
+  <p class="ronda-tit">LO QUE SE VE <i></i></p>
   <ul class="chips" id="ronda-b">
-    <li><b>Anchos y reflujo</b><span>el hueco entre breakpoints, no el móvil</span></li>
-    <li><b>Estados límite</b><span>vacío, cargando, caído, desbordado</span></li>
-    <li><b>Rendimiento</b><span>peso, primer dibujo, gama baja</span></li>
-    <li><b>Conversión y compartido</b><span>qué ve quien llega y quien recibe el link</span></li>
-    <li><b>Dirección de arte</b><span>las imágenes como conjunto</span></li>
+    <li><b>Diseño y consistencia</b><span>las capturas contra Apple y contra sí mismas</span></li>
+    <li><b>Estados límite y anchos</b><span>vacío, error, lento, desbordado, entre breakpoints</span></li>
+    <li><b>Web pública</b><span>Safari, rendimiento, cómo se comparte, imágenes</span></li>
   </ul>
 
   <h2 class="col" style="margin-top:46px">Y nada se acepta por venir de un revisor</h2>
-  <p class="col muted">Once revisores sin refutación son once veces más ruido. Una sospecha de vulnerabilidad de esa misma corrida resultó falsa al probarla contra producción.</p>
+  <p class="col muted">Siete revisores sin refutación son siete veces más ruido. Una sospecha de vulnerabilidad de esa misma corrida resultó falsa al probarla contra producción.</p>
   <ul class="sellos">
     <li class="s-ok">CONFIRMADO · lo reprodujiste</li>
     <li class="s-pl">PLAUSIBLE · no se arregla a ciegas</li>
@@ -389,13 +382,13 @@ footer{padding-block:40px 60px;border-top:1px solid var(--hair);font-size:13px;c
 
 <section id="instalar">
   <div class="marca"><b>07</b><i></i><u>INSTALACIÓN</u></div>
-  <h2 class="col">Dos líneas</h2>
-  <p class="lede col">Copiá la carpeta <code>skill/</code> a tus skills de Claude Code. Se carga en la sesión siguiente.</p>
+  <h2 class="col">Un clon y un enlace</h2>
+  <p class="lede col">Enlazá la carpeta <code>skill/</code> en tus skills de Claude Code (así <code>git pull</code> la actualiza). Se carga en la sesión siguiente. En Windows, el README trae el equivalente sin administrador.</p>
 
   <div class="consola"><pre><span class="c"># para todos tus proyectos</span>
-git clone https://github.com/migueedlsantos97/revision-impecable
-cp -r revision-impecable/skill ~/.claude/skills/revision-impecable</pre></div>
-  <button class="boton fantasma" type="button" id="copiar" data-cmd="git clone https://github.com/migueedlsantos97/revision-impecable && cp -r revision-impecable/skill ~/.claude/skills/revision-impecable">Copiar</button>
+git clone https://github.com/migueedlsantos97/revision-impecable ~/revision-impecable
+ln -s ~/revision-impecable/skill ~/.claude/skills/revision-impecable</pre></div>
+  <button class="boton fantasma" type="button" id="copiar" data-cmd="git clone https://github.com/migueedlsantos97/revision-impecable ~/revision-impecable && ln -s ~/revision-impecable/skill ~/.claude/skills/revision-impecable">Copiar</button>
 
   <p style="margin-top:28px" class="col">Después alcanza con pedirlo con tus palabras:</p>
   <p class="pedido">revisá todo antes de mostrárselo al cliente</p>
@@ -410,9 +403,9 @@ cp -r revision-impecable/skill ~/.claude/skills/revision-impecable</pre></div>
   <nav class="pie" aria-label="Enlaces del proyecto">
     <a href="https://github.com/migueedlsantos97/revision-impecable">Repositorio</a>
     <a href="https://github.com/migueedlsantos97/revision-impecable/blob/main/ejemplos/informe-ejemplo.md">Informe de ejemplo</a>
-    <a href="https://github.com/migueedlsantos97/revision-impecable/blob/main/skill/references/encargos.md">Los once encargos</a>
+    <a href="https://github.com/migueedlsantos97/revision-impecable/blob/main/skill/references/encargos.md">Los siete encargos</a>
   </nav>
-  <p style="margin:0">Licencia MIT · Miguel de los Santos · Escrita en español, que es el idioma en el que revisa.</p>
+  <p style="margin:0">Licencia MIT · Miguel de los Santos · Sin fuentes ni scripts externos: no pide nada a terceros al abrirla · Escrita en español, que es el idioma en el que revisa.</p>
 </footer>
 
 </div>

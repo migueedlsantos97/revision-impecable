@@ -13,6 +13,9 @@ comprobar.
 
 ## Lo que mide el script (`medir.py`)
 
+Los valores numéricos y su justificación están en `umbrales.md` (tabla única);
+esta tabla solo los resume.
+
 | Regla | Valor de base | Tipo de falla |
 |---|---|---|
 | Todo lo que se toca mide al menos 44 × 44 pt | 44 px en web; en apps solo de escritorio con mouse se puede bajar con `tactil_puntero` (no menos de 28) | `tactil` |
@@ -25,7 +28,7 @@ comprobar.
 | Todo control tiene nombre | botón de ícono con `aria-label` | `icono_sin_nombre` |
 | El foco se ve | al recibirlo cambia algo a la vista | `foco_invisible` |
 | Modo oscuro completo | todo cambia con el tema, nada queda a medias | `tema_a_medias` (sospecha) |
-| Movimiento reducido | se mide con `prefers-reduced-motion: reduce` puesto | (las capturas salen así) |
+| Movimiento reducido | las capturas salen con `prefers-reduced-motion: reduce`; que la app lo respete lo revisa el revisor 5 | (revisor 5) |
 | Consistencia | una forma por componente, la misma en todos los sistemas | `variantes`, `casi_iguales`, `distinto_por_sistema`, `mismo_rotulo_distinta_forma` |
 
 ## Lo que se juzga mirando las capturas (revisor 2, con criterio)
@@ -91,9 +94,10 @@ abierta:
 - Con texto ampliado al 200 % nada se rompe ni se esconde.
 
 **Escritura**
-- Breve, en las palabras de quien usa la app, sin jerga de sistema. En
-  español, mayúscula solo al principio ("Guardar cambios", no "Guardar
-  Cambios").
+- Breve, en las palabras de quien usa la app, sin jerga de sistema. Se aplica
+  la convención del idioma de la interfaz (en español, mayúscula solo al
+  principio: "Guardar cambios"; en inglés, elegir "Title Case" o "Sentence case"
+  según la guía del producto y mantenerla).
 - Botones con verbo que dice qué pasa.
 
 ## Cómo reportar algo de criterio

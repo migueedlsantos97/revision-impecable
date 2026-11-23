@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Clientes</title>
+<style>
+body{font:16px system-ui;margin:0 auto;max-width:560px;padding:16px;color:#1b1b1b;background:#fff}
+nav a{display:inline-block;min-height:44px;line-height:44px;margin-right:12px;color:#0b5cad}
+li{padding:8px 0;border-bottom:1px solid #ddd}
+</style></head><body>
+<nav><a href="#">Clientes</a><a href="#">Usuarios</a><a href="#">Cuentas</a></nav>
+<h1>Clientes</h1>
+<p>Total a cobrar: <b id="total"></b></p>
+<p id="cuenta"></p>
+<ul id="lista"></ul>
+<script>
+const datos=[
+  {nombre:'Ñandú Construcciones',alta:'2026-04-03',monto:1234.5},
+  {nombre:'Zeta Aberturas',alta:'2026-03-04',monto:80},
+  {nombre:'Álvaro Jardín🌿 Integral',alta:'2026-01-02',monto:19999.9},
+  {nombre:'Beta SA',alta:'2026-12-01',monto:0}
+];
+datos.sort((a,b)=>a.nombre<b.nombre?-1:1);
+document.getElementById('total').textContent=new Intl.NumberFormat(undefined,{style:'currency',currency:'UYU'}).format(datos.reduce((s,d)=>s+d.monto,0));
+document.getElementById('cuenta').textContent=datos.length+' resultados';
+document.getElementById('lista').innerHTML=datos.map(d=>{
+  const corto=d.nombre.length>14?d.nombre.slice(0,14)+'…':d.nombre;
+  const f=new Date(d.alta).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'});
+  return '<li>'+corto+' · alta '+f+' · '+new Intl.NumberFormat(undefined,{style:'currency',currency:'UYU'}).format(d.monto)+'</li>';
+}).join('');
+</script></body></html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Inscripción</title>
+<style>
+body{font:16px system-ui;margin:0 auto;max-width:520px;padding:16px;color:#1b1b1b;background:#fff}
+input,button,select{min-height:44px;font-size:16px;padding:0 12px;border:1px solid #767676;border-radius:8px;margin:4px 0;box-sizing:border-box;width:100%}
+button{background:#0b5cad;color:#fff;border:0;width:auto;padding:0 16px}
+.err{border-color:#d00}
+fieldset{border:1px solid #ccc;border-radius:8px;margin:12px 0}
+fieldset label{display:block;padding:6px 0}
+#modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center}
+#modal.abierto{display:flex}
+#modal div{background:#fff;padding:20px;border-radius:10px;max-width:360px}
+</style></head><body>
+<h1>Inscripción</h1>
+<form id="f" novalidate>
+  <label>Nombre</label>
+  <input id="nombre" type="text" tabindex="3">
+  <label for="correo">Correo</label>
+  <input id="correo" type="email" tabindex="1">
+  <label for="tel">Teléfono</label>
+  <input id="tel" type="number" tabindex="2">
+  <fieldset><legend>Plan</legend>
+    <label><input type="radio" name="plan" value="a"> Básico</label>
+    <label><input type="radio" name="plan" value="b"> Completo (<a href="#" id="verplan">ver qué incluye</a>)</label>
+  </fieldset>
+  <button type="submit">Enviar</button>
+</form>
+<div id="modal"><div><h2>Plan completo</h2><p>Incluye todo lo del básico y soporte.</p><button id="cerrar" type="button">Cerrar</button></div></div>
+<p id="msg"></p>
+<script>
+document.getElementById('f').onsubmit=e=>{
+  e.preventDefault();
+  const c=document.getElementById('correo');
+  if(!c.value.includes('@')){c.classList.add('err');return;}
+  c.classList.remove('err');
+  document.getElementById('msg').textContent='Enviado';
+};
+document.getElementById('verplan').onclick=e=>{e.preventDefault();document.getElementById('modal').classList.add('abierto');};
+document.getElementById('cerrar').onclick=()=>document.getElementById('modal').classList.remove('abierto');
+</script></body></html>

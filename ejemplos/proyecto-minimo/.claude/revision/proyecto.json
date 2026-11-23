@@ -1,0 +1,13 @@
+{
+  "nombre": "proyecto-minimo",
+  "url": "http://127.0.0.1:8090",
+  "arranque": {"comando": "python app.py 8090", "cwd": ".", "listo": "/", "espera": 20, "env": {}},
+  "doctor": "curl -fsS http://127.0.0.1:8090/",
+  "anchos": [390, 1366],
+  "umbrales": {"tactil": 44, "texto": 13, "contraste": "AA", "scroll_propio": false, "foco_propio": false, "max_variantes": 2},
+  "autonomia": "acompanado",
+  "vueltas": 2,
+  "pantallas": [
+    {"id": "pedidos", "sistema": "ejemplo", "ruta": "/index.html", "esperar": "table"}
+  ]
+}

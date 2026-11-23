@@ -1,5 +1,7 @@
-(u) => {
-  // Se inyecta en la página. Recibe umbrales y devuelve {fallas: [{tipo, selector, detalle}], componentes: [...], tema: {...}}.
+async (u) => {
+  // Se inyecta en la página. Recibe umbrales y devuelve {fallas: [{tipo, selector, detalle}], componentes: [...], tema: {...}, titulo}.
+  // why: sin esperar las fuentes se mide texto con la fuente de reemplazo (anchos y contraste distintos); tope de 3 s
+  try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 3000))]); } catch (x) { /* sin Font Loading API */ }
   const fallas = [];
   const cs = (e) => getComputedStyle(e);
   const SALTAR = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'HEAD', 'TITLE', 'META', 'LINK', 'OPTION', 'OPTGROUP', 'TEMPLATE']);
@@ -112,7 +114,7 @@
     if (!/(hidden|clip)/.test(s.overflowX) || s.textOverflow === 'ellipsis' || ok(e, 'recorte')) continue;
     const b = e.getBoundingClientRect();
     if (b.width < 40 || b.height < 16 || !rectVisible(e)) continue;
-    if (e.scrollWidth > e.clientWidth + 4 && e.querySelector('*') && e.innerText.trim()) {
+    if (e.scrollWidth > e.clientWidth + u.tol_recorte && e.querySelector('*') && e.innerText.trim()) {
       fallas.push({ tipo: 'recortado', selector: selector(e), detalle: 'adentro mide ' + e.scrollWidth + ' px y se ven ' + e.clientWidth + '; lo demás queda escondido sin scroll' });
     }
   }
@@ -166,7 +168,8 @@
 
   // 3. glifos y emoji usados como íconos (los dibuja el sistema, cambian entre aparatos)
   const EMOJI = /\p{Extended_Pictographic}/u;
-  const SIMBOLO = /[☀-➿⬀-⯿←-⇿■-◿✓✔✖★☆☰]/u;
+  const SIMBOLO = /[☀-➿⬀-⯿←-⇿■-◿✓✔✖★☆☰×‹›✕]/u;
+  const SIN_MARCAS = (t) => t.replace(/[©®™]/g, ''); // why: © ® ™ son texto legal, no íconos, aunque Unicode los llame pictográficos
   for (const { e } of textuales) {
     if (ok(e, 'glifo')) continue;
     for (const n of e.childNodes) {
@@ -174,8 +177,9 @@
       const t = n.textContent.trim();
       // why: una flecha dentro de una frase es tipografía; sola, en un botón o una etiqueta, es un ícono
       const comoIcono = SIMBOLO.test(t) && (t.replace(/\s/g, '').length <= 2 || (e.closest('button,a,[role=button],[role=tab]') && t.length <= 4));
-      if ((EMOJI.test(t) && !/^[\d#*]+$/.test(t)) || comoIcono) {
-        const m = (t.match(EMOJI) || t.match(SIMBOLO))[0];
+      const tl = SIN_MARCAS(t);
+      if ((EMOJI.test(tl) && !/^[\d#*]+$/.test(tl)) || comoIcono) {
+        const m = (tl.match(EMOJI) || t.match(SIMBOLO))[0];
         fallas.push({ tipo: 'glifo', selector: selector(e), detalle: '«' + m + '» lo dibuja la fuente del sistema; usar un ícono SVG' });
         break;
       }
@@ -193,7 +197,7 @@
     if (!bg) continue;
     const fg = mezcla(rgba(s.color), bg);
     const ra = razon(fg, bg);
-    const grande = px >= 24 || (px >= 18.66 && parseInt(s.fontWeight, 10) >= 700);
+    const grande = px >= u.texto_grande_px || (px >= u.texto_grande_negrita_px && parseInt(s.fontWeight, 10) >= 700);
     const need = grande ? min[1] : min[0];
     if (ra < need - 0.005) fallas.push({ tipo: 'contraste', selector: selector(e), detalle: hex(fg) + ' sobre ' + hex(bg) + ' da ' + ra.toFixed(2) + ':1, pide ' + need + ':1' });
   }
@@ -213,18 +217,21 @@
   // 7. solapes entre controles y textos (salvo contención y zonas marcadas)
   const recorte = (e) => { let l = -1e9, t = -1e9, r = 1e9, b = 1e9; for (let n = e; n && n !== document.body; n = n.parentElement) { const o = cs(n); if (/(auto|scroll|hidden|clip)/.test(o.overflowY + o.overflowX)) { const q = n.getBoundingClientRect(); l = Math.max(l, q.left); t = Math.max(t, q.top); r = Math.min(r, q.right); b = Math.min(b, q.bottom); } } return { l, t, r, b }; };
   const enFijo = (e) => { for (let n = e; n && n !== document.body; n = n.parentElement) { const p = cs(n).position; if (p === 'fixed' || p === 'sticky') return true; } return false; };
-  const cand = [...interactivos, ...textuales].slice(0, 700);
+  const todos = [...interactivos, ...textuales];
+  const cand = todos.slice(0, u.max_candidatos_solape);
+  if (todos.length > cand.length) fallas.push({ tipo: 'solape_truncado', selector: 'html', detalle: 'hay ' + todos.length + ' elementos y solo se compararon ' + cand.length + ' (umbrales.max_candidatos_solape)' });
+  const pre = cand.map((c) => ({ ...c, rc: recorte(c.e), fijo: enFijo(c.e) }));
   const ya = new Set();
-  for (let i = 0; i < cand.length; i++) {
-    for (let j = i + 1; j < cand.length; j++) {
-      const a = cand[i], b = cand[j];
+  for (let i = 0; i < pre.length; i++) {
+    for (let j = i + 1; j < pre.length; j++) {
+      const a = pre[i], b = pre[j];
       if (a.e === b.e || a.e.contains(b.e) || b.e.contains(a.e)) continue;
       if (ok(a.e, 'solape') || ok(b.e, 'solape')) continue;
-      if (enFijo(a.e) !== enFijo(b.e)) continue; // why: una barra fija tapa por diseño lo que scrollea debajo
-      const ca = recorte(a.e), cb = recorte(b.e);
+      if (a.fijo !== b.fijo) continue; // why: una barra fija tapa por diseño lo que scrollea debajo
+      const ca = a.rc, cb = b.rc;
       const iw = Math.min(a.r.r, b.r.r, ca.r, cb.r) - Math.max(a.r.l, b.r.l, ca.l, cb.l);
       const ih = Math.min(a.r.b, b.r.b, ca.b, cb.b) - Math.max(a.r.t, b.r.t, ca.t, cb.t);
-      if (iw > 2 && ih > 2) {
+      if (iw > u.tol_solape && ih > u.tol_solape) {
         const clave = selector(a.e) + '|' + selector(b.e);
         if (ya.has(clave)) continue;
         ya.add(clave);
@@ -247,7 +254,7 @@
   };
   const vistos = new Set();
   const anotar = (e, clase) => { if (vistos.has(e) || !rectVisible(e)) return; vistos.add(e); componentes.push(firma(e, clase)); };
-  const saturado = (c) => { const mx = Math.max(c[0], c[1], c[2]), mn = Math.min(c[0], c[1], c[2]); return c[3] > 0.5 && mx > 0 && (mx - mn) / mx > 0.35; };
+  const saturado = (c) => { const mx = Math.max(c[0], c[1], c[2]), mn = Math.min(c[0], c[1], c[2]); return c[3] > 0.5 && mx > 0 && (mx - mn) / mx > u.saturacion; };
   const activo = (e) => e.matches('[aria-current]:not([aria-current=false]),[aria-selected=true],[aria-pressed=true],[aria-checked=true],.active,.activo,.on,.sel,.is-active');
   document.querySelectorAll('button,[role=button],[role=tab],input[type=submit],input[type=button],a').forEach((e) => {
     const s = cs(e);
@@ -268,7 +275,7 @@
   document.querySelectorAll('[role=dialog],dialog').forEach((e) => anotar(e, 'dialogo'));
   // tarjetas: cajas con fondo o borde propio y radio, de tamaño de tarjeta
   document.querySelectorAll('div,section,article,li').forEach((e) => {
-    if (componentes.length > 1500) return;
+    if (componentes.length > u.max_componentes) return;
     const s = cs(e), b = e.getBoundingClientRect();
     if (b.width < 120 || b.height < 60 || parseFloat(s.borderTopLeftRadius) < 2) return;
     const bg = rgba(s.backgroundColor);
@@ -276,11 +283,82 @@
     anotar(e, 'tarjeta');
   });
 
+  // 8b. accesibilidad básica y chequeos de documento (sin criterio: o está o no está)
+  const falla = (tipo, sel, det) => fallas.push({ tipo, selector: sel, detalle: det });
+  if (!(document.documentElement.getAttribute('lang') || '').trim()) falla('sin_lang', 'html', 'falta <html lang>: los lectores de pantalla no saben en qué idioma leer');
+  if (!document.querySelector('meta[name=viewport]')) falla('sin_viewport', 'head', 'falta <meta name="viewport">: el celular renderiza la página como de escritorio');
+  if (!(document.title || '').trim()) falla('sin_titulo', 'head', 'la página no tiene <title>');
+  const textoDe = (ids) => (ids || '').split(/\s+/).filter(Boolean).map((i) => { const n = document.getElementById(i); return n ? (n.textContent || '').trim() : ''; }).join('').trim();
+  const nombreDe = (e) => (e.getAttribute('aria-label') || '').trim() || textoDe(e.getAttribute('aria-labelledby')) || (e.getAttribute('title') || '').trim();
+
+  document.querySelectorAll('img:not([alt])').forEach((e) => {
+    if (e.closest('[aria-hidden=true]') || e.getAttribute('role') === 'presentation' || e.getAttribute('role') === 'none' || ok(e, 'alt') || !rectVisible(e)) return;
+    falla('img_sin_alt', selector(e), 'img sin atributo alt (un alt="" vacío marca una imagen decorativa)');
+  });
+  document.querySelectorAll('img').forEach((e) => {
+    if (ok(e, 'dimensiones') || !rectVisible(e) || (e.getAttribute('width') && e.getAttribute('height')) || cs(e).aspectRatio !== 'auto' || e.style.height || e.closest('picture,[style*=aspect-ratio]')) return;
+    falla('img_sin_dimensiones', selector(e), 'sin width/height ni aspect-ratio: la página se corre al cargar la imagen (CLS)');
+  });
+  document.querySelectorAll('input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset]):not([type=image]),select,textarea').forEach((e) => {
+    if (ok(e, 'nombre') || !rectVisible(e)) return;
+    const conLabel = [...(e.labels || [])].some((l) => (l.textContent || '').trim());
+    if (!conLabel && !nombreDe(e)) falla('campo_sin_nombre', selector(e), 'campo sin label, aria-label ni title (el placeholder no es un nombre)');
+  });
+  const ICONO = 'svg,img,i,[class*=icon],[class*=ico]';
+  document.querySelectorAll('a[href],button,[role=button],[role=link]').forEach((e) => {
+    if (ok(e, 'nombre') || !rectVisible(e)) return;
+    const href = e.getAttribute('href');
+    if (e.tagName === 'A' && e.getAttribute('role') !== 'button' && (href === '#' || /^\s*javascript:/i.test(href || ''))) {
+      falla('enlace_falso', selector(e), 'enlace con href="' + href.slice(0, 30) + '": es un botón disfrazado (no navega ni se anuncia como botón)');
+    }
+    const hijoAlt = [...e.querySelectorAll('img[alt],svg title')].some((x) => (x.getAttribute('alt') || x.textContent || '').trim());
+    if (!(e.innerText || '').trim() && !nombreDe(e) && !hijoAlt && !e.querySelector(ICONO) && !(e.value || '').trim()) falla('sin_nombre_accesible', selector(e), 'enlace o botón vacío: sin texto, aria-label ni title');
+  });
+  const porId = {};
+  document.querySelectorAll('[id]').forEach((e) => { if (e.id) (porId[e.id] = porId[e.id] || []).push(e); });
+  Object.keys(porId).filter((id) => porId[id].length > 1).slice(0, 30).forEach((id) => falla('id_duplicado', '#' + id, porId[id].length + ' elementos con el mismo id'));
+  ['aria-labelledby', 'aria-describedby', 'aria-controls', 'aria-owns'].forEach((at) => {
+    document.querySelectorAll('[' + at + ']').forEach((e) => {
+      const rotos = (e.getAttribute(at) || '').split(/\s+/).filter((i) => i && !document.getElementById(i));
+      if (rotos.length) falla('aria_roto', selector(e), at + ' apunta a #' + rotos.join(', #') + ', que no existe');
+    });
+  });
+  document.querySelectorAll('label[for]').forEach((l) => { if (!document.getElementById(l.getAttribute('for'))) falla('aria_roto', selector(l), 'label for="' + l.getAttribute('for') + '" apunta a un id que no existe'); });
+  document.querySelectorAll('[tabindex]').forEach((e) => {
+    if (parseInt(e.getAttribute('tabindex'), 10) > 0 && !ok(e, 'tabindex')) falla('tabindex_positivo', selector(e), 'tabindex=' + e.getAttribute('tabindex') + ' rompe el orden natural del teclado; usar 0 o reordenar el DOM');
+  });
+  // headings: una h1 y sin saltos de nivel
+  const hs = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6,[role=heading][aria-level]')].filter((e) => rectVisible(e));
+  const nivel = (e) => (e.tagName[0] === 'H' && e.tagName.length === 2 ? +e.tagName[1] : parseInt(e.getAttribute('aria-level'), 10) || 2);
+  const h1s = hs.filter((e) => nivel(e) === 1);
+  if (hs.length && h1s.length !== 1) falla('heading_h1', h1s[1] ? selector(h1s[1]) : 'body', h1s.length ? h1s.length + ' títulos h1 (debería haber uno)' : 'la página no tiene h1');
+  hs.forEach((e, i) => { if (i && nivel(e) - nivel(hs[i - 1]) > u.heading_max_salto) falla('heading_salto', selector(e), 'salta de h' + nivel(hs[i - 1]) + ' a h' + nivel(e)); });
+  // texto cortado con puntos suspensivos o line-clamp, sin forma de leerlo entero
+  document.body.querySelectorAll('*').forEach((e) => {
+    const s = cs(e);
+    const clamp = s.webkitLineClamp && s.webkitLineClamp !== 'none';
+    if ((s.textOverflow !== 'ellipsis' && !clamp) || ok(e, 'cortado') || e.closest('[title],[aria-label]')) return;
+    if ((clamp ? e.scrollHeight > e.clientHeight + 1 : e.scrollWidth > e.clientWidth + 1) && rectVisible(e)) falla('texto_cortado_sin_title', selector(e), 'el texto se corta y no hay title para leerlo completo');
+  });
+  // fuentes que no cargaron
+  try { [...document.fonts].filter((f) => f.status === 'error').slice(0, 10).forEach((f) => falla('fuente_no_cargo', f.family, 'la fuente declarada no se pudo cargar; se muestra la de reemplazo')); } catch (x) { /* sin API */ }
+  // lo que tapa a un control: en el centro de un control a la vista, el elemento de más arriba no es él ni lo contiene
+  const pv = { w: window.innerWidth, h: window.innerHeight };
+  for (const { e, r } of interactivos.slice(0, 300)) {
+    if (ok(e, 'tapado') || enFijo(e)) continue;
+    const cx = (r.l + r.r) / 2, cy = (r.t + r.b) / 2;
+    if (cx < 0 || cy < 0 || cx >= pv.w || cy >= pv.h) continue;
+    const t = document.elementFromPoint(cx, cy);
+    if (t && t !== e && !e.contains(t) && !t.contains(e) && !(e.closest('label') && e.closest('label').contains(t)) && !(t.closest('label') && t.closest('label').contains(e))) {
+      falla('tapado', selector(e), 'en su centro hay otro elemento encima: ' + selector(t));
+    }
+  }
+
   // 9. muestra de colores para comparar entre temas
   const muestra = {};
   let k = 0;
   for (const e of document.body.querySelectorAll('*')) {
-    if (k > 900) break;
+    if (k > u.max_muestra) break;
     if (SALTAR.has(e.tagName) || e.closest('svg,[aria-hidden=true]') || !rectVisible(e)) continue;
     const s = cs(e);
     const bg = rgba(s.backgroundColor);
@@ -294,5 +372,5 @@
   }
   const fondoPagina = hex(fondo(document.body) || [255, 255, 255]);
 
-  return { fallas, componentes, tema: { fondoPagina, muestra } };
+  return { fallas, componentes, tema: { fondoPagina, muestra }, titulo: document.title || '' };
 }
