@@ -372,5 +372,7 @@ async (u) => {
   }
   const fondoPagina = hex(fondo(document.body) || [255, 255, 255]);
 
-  return { fallas, componentes, tema: { fondoPagina, muestra }, titulo: document.title || '' };
+  const silencios = {};
+  document.querySelectorAll('[data-revision-ok]').forEach((e) => { (e.getAttribute('data-revision-ok') || '').split(/\s+/).filter(Boolean).forEach((k) => { silencios[k] = (silencios[k] || 0) + 1; }); });
+  return { fallas, componentes, tema: { fondoPagina, muestra }, titulo: document.title || '', silencios };
 }

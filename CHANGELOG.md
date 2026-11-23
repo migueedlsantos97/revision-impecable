@@ -5,6 +5,32 @@ ver "Pendiente de versionado" abajo.
 
 ## [Sin publicar] - rama `mejoras-generales`
 
+### v2.2 — fidelidad a la fuente, incremental y autonomía total
+- **Por qué**: una auditoría contra la entrevista y pstack mostró que la skill
+  cubría la verificación y el estructurar errores, pero no el relevo por límite de
+  contexto, el presupuesto, el estado verificado por sistema, el baseline visual,
+  la verificación de la cadena de los revisores, ni cómo mejorar a la vez la skill y
+  la app medida.
+- **Agregado** (`references/`): `relevo.md` (checkpoint, punto seguro, relevo,
+  reanudar); `incremental.md` (estado por sistema, dependencias, alcance, sondas);
+  `coordinacion.md` (escala ligera por defecto, modelo por rol, zonas de archivos
+  y worktrees, cadena de revisores, pase de mantenimiento del mapa);
+  `mejora-continua.md` (tabla general/proyecto, carriles, métricas); plantilla
+  `assets/LEEME-AL-VOLVER.md`. `noche.md` reescrito con contrato de seguridad,
+  requisitos para "ganarse el loop", `decisiones.tsv` con antes/después/veredicto,
+  salida de escape y "Atención" por otro revisor.
+- **Cambiado**: `umbrales.md` (meseta = pivotar una vez antes de parar; los
+  silenciamientos cuentan; presupuesto); `adaptador.md` (chequeos propios,
+  estado, dependencias, baseline); `SKILL.md` (escalera de garantías, baseline,
+  un cambio una medición, paso 0 de "Corrección del usuario", criterio de salida).
+- **README**: la entrevista queda en su canal primario; se distingue qué ideas
+  vienen de la fuente y cuáles son propias; la otra charla se cita solo como
+  complementaria, sin cifras de agentes.
+- **Casos reales** #39-#41 (anonimizados).
+- **Hipótesis abiertas**: que la escala ligera por defecto no baje la cobertura
+  (se confirma con escapes en las primeras corridas); que el mapa de dependencias
+  generado por lectura sea suficiente sin validación manual.
+
 ### Agregado
 - `README.en.md`, `CHANGELOG.md`, `CONTRIBUTING.md` y `SECURITY.md`.
 - README: requisitos, ejemplo de 5 minutos con `ejemplos/proyecto-minimo/`, instalación con junction (Windows, sin

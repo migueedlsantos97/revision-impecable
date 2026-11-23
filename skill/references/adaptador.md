@@ -225,6 +225,19 @@ mismo cambio. Una regla cuyo error ya no puede pasar se borra. Abajo de la
 tabla, la lista de revisiones con fecha y rutas cubiertas (la usa el paso 1
 para buscar escapes).
 
+## 4 bis. Chequeos propios (`chequeos/`)
+
+Lo que solo vale en esta app se vuelve código, no texto. Un archivo por chequeo
+en `.claude/revision/chequeos/<id>.js` (o `.py`) que exporta
+`chequear(page, pantalla) -> [{tipo, certeza, selector, detalle}]`. `medir.py
+--chequeos .claude/revision/chequeos` los corre junto con los genéricos y los
+marca con `origen: "proyecto"`; un chequeo que lanza excepción produce la falla
+`chequeo_roto` (no se ignora). Cada chequeo se prueba contra el defecto real
+(falla) y contra lo limpio (no dispara). **Tienen que correr donde se exige a una
+persona**: se engancha `medir.py --chequeos … --rapido` (o los tests del chequeo)
+al pre-commit o al CI del proyecto; si no se puede, se anota como deuda en
+`reglas.md`.
+
 ## 5. Probalo antes de usarlo
 
 Corré el adaptador una vez de punta a punta: levantar, `doctor`, entrar con cada
@@ -232,7 +245,25 @@ rol, `medir.py --pantalla <una> --rapido`, una función del mapa, apagar.
 Después de apagar, confirmá que la evidencia sigue en `salida/`. Un adaptador
 que nunca se ejecutó es un borrador.
 
+## 5 bis. Estado, dependencias y baseline (revisión incremental)
+
+Para revisar solo lo que cambió, el adaptador suma (detalle y reglas en
+`incremental.md`):
+- `estado/<sistema>.json`: qué quedó verificado, en qué commit, con qué medidas
+  y hashes; lo escribe `scripts/estado.py`.
+- `dependencias.json`: `sistemas` (propios / consume), `compartido` (qué archivo
+  afecta a quién) y `pantallas` por sistema; se valida cambiando un token en una
+  copia.
+- `baseline/`: capturas aprobadas por pantalla, ancho y tema, con `CAMBIOS.tsv`
+  (qué se aprobó, cuándo y por qué). No se regeneran para hacer pasar un diff.
+- `metricas.json` (acumulativo) y `chequeos/` (arriba).
+- `proyecto.json` puede declarar `presupuesto` (`{"tokens": n, "minutos": n}`),
+  `escala` (`ligera` por defecto) y `entorno_prueba` (hosts permitidos).
+
 ## 6. Mantenerlo
+
+El pase de mantenimiento completo del mapa (un lector por función, resultado
+clean/changed/blocked) está en `coordinacion.md`, §5.
 
 En cada corrida, antes de medir: índice del mapa al día (sin entradas muertas ni
 duplicadas), pantallas nuevas agregadas, `doctor` en verde. Un comportamiento

@@ -14,6 +14,8 @@ Escribe informe.json, informe.md, capturas y una hoja de contacto por pantalla. 
 Nunca apunta a producción: usa la URL de prueba del adaptador o levanta la instancia con su comando de arranque.
 """
 import argparse
+import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -29,6 +31,8 @@ from collections import Counter, defaultdict, deque
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urldefrag, urlparse
+
+from _comun import hash_config, rev_dir, utf8
 
 AQUI = Path(__file__).resolve().parent
 MEDIDAS = (AQUI / "medidas.js").read_text(encoding="utf-8")
@@ -55,10 +59,12 @@ UMBRALES = {
     "heading_max_salto": 1,  # niveles que puede saltarse un heading respecto del anterior
     "ignorar_url": [],       # regex de URLs cuyos 4xx/5xx y fallas de red no cuentan
     "desactivar": [],        # tipos de falla a descartar, p. ej. ["img_sin_dimensiones"]
+    "baseline_pct": 0.1,     # % de píxeles que pueden cambiar contra la referencia visual
+    "baseline_ruido": 16,    # diferencia de canal (0-255) por debajo de la cual un píxel cuenta como igual
 }
 SOSPECHA = {"img_sin_dimensiones", "heading_h1", "heading_salto", "tapado", "texto_cortado_sin_title", "titulo_duplicado",
             "enlace_falso", "solape_truncado", "variantes", "casi_iguales", "escala", "distinto_por_sistema",
-            "mismo_rotulo_distinta_forma", "tema_a_medias", "recortado"}
+            "mismo_rotulo_distinta_forma", "tema_a_medias", "recortado", "regresion_visual"}
 
 
 def _url(base, ruta):
@@ -421,10 +427,150 @@ def _cargar(pg, url, u):
         pass
 
 
+def nuevo_acum(opc=None):
+    return {"fallas": [], "componentes": [], "titulos": {}, "medidas": [], "silencios": {}, "t0": time.time(), "capturas": 0,
+            "omitidas": [], "incompleto": "", "opc": opc or {}, "baseline": Counter(), "desactivadas": Counter()}
+
+
+def _limites(cfg):
+    """limites del adaptador: {max_minutos, max_capturas}. Un valor que no es número positivo se ignora con aviso."""
+    out = {}
+    for k, tipo in (("max_minutos", float), ("max_capturas", int)):
+        v = (cfg.get("limites") or {}).get(k)
+        if v is None:
+            continue
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0:
+            print("aviso: limites.%s debe ser un número mayor que 0 (vale %r); se ignora" % (k, v), file=sys.stderr)
+            continue
+        out[k] = tipo(v)
+    return out
+
+
+def _excedido(acum):
+    lim = acum["opc"].get("limites") or {}
+    if lim.get("max_minutos") and (time.time() - acum["t0"]) / 60 >= lim["max_minutos"]:
+        return "max_minutos=%g" % lim["max_minutos"]
+    if lim.get("max_capturas") and acum["capturas"] >= lim["max_capturas"]:
+        return "max_capturas=%d" % lim["max_capturas"]
+    return ""
+
+
+# --- baseline visual: la captura aprobada es la referencia; un cambio fuera de la tolerancia es una regresión sospechosa ---
+def _comparar(ref, nuevo, ruido):
+    from PIL import Image, ImageChops
+    with Image.open(ref) as a0, Image.open(nuevo) as b0:
+        a, b = a0.convert("RGB"), b0.convert("RGB")
+    if a.size != b.size:
+        return 100.0, None, "tamaño %dx%d contra %dx%d de la referencia" % (b.width, b.height, a.width, a.height)
+    m = ImageChops.difference(a, b).convert("L").point(lambda v: 255 if v > ruido else 0)
+    return 100.0 * m.histogram()[255] / (a.width * a.height), (b, m), ""
+
+
+def _baseline(png, pan, ancho, tema, u, acum):
+    o = acum["opc"]
+    d = o.get("baseline_dir")
+    if not d:
+        return []
+    d.mkdir(parents=True, exist_ok=True)
+    ref = d / png.name
+    if o.get("aprobar"):
+        antes = ""
+        if ref.exists():
+            try:
+                antes = "%.3f" % _comparar(ref, png, u["baseline_ruido"])[0]
+            except Exception:
+                antes = "?"
+        shutil.copyfile(png, ref)
+        cambios = d / "CAMBIOS.tsv"
+        nuevo = not cambios.exists()
+        with open(cambios, "a", encoding="utf-8", newline="") as f:
+            if nuevo:
+                f.write("fecha\tarchivo\tpct_cambiado_antes\tmotivo\n")
+            f.write("%s\t%s\t%s\t%s\n" % (datetime.now().isoformat(timespec="minutes"), png.name, antes, re.sub(r"\s+", " ", o["motivo"]).strip()))
+        acum["baseline"]["aprobadas"] += 1
+        return []
+    if not ref.exists():
+        shutil.copyfile(png, ref)
+        acum["baseline"]["creadas"] += 1
+        return []
+    pct, dif, aviso = _comparar(ref, png, u["baseline_ruido"])
+    acum["baseline"]["comparadas"] += 1
+    if pct <= u["baseline_pct"]:
+        return []
+    ruta = str(png)
+    if dif:
+        from PIL import Image
+        ruta_diff = o["diffs"] / (png.stem + "-diff.png")
+        ruta_diff.parent.mkdir(parents=True, exist_ok=True)
+        b, m = dif
+        Image.composite(Image.new("RGB", b.size, (255, 0, 0)), b, m).save(ruta_diff)
+        ruta = str(ruta_diff)
+    acum["baseline"]["regresiones"] += 1
+    return [{"tipo": "regresion_visual", "selector": png.name,
+             "detalle": "%s; la tolerancia es %g %%. Diff: %s. Si el cambio es intencional: --aprobar-baseline --pantalla %s --motivo \"...\"" % (
+                 aviso or "cambió %.3f %% de los píxeles" % pct, u["baseline_pct"], ruta, pan["id"])}]
+
+
+# --- chequeos del proyecto: .js evaluados en la página, .py con chequear(page, pantalla) ---
+def cargar_chequeos(carpeta):
+    """-> (chequeos, rotos). Un archivo que no cumple el contrato es una falla chequeo_roto, no un error de la corrida."""
+    chequeos, rotos = [], []
+    if not carpeta or not Path(carpeta).is_dir():
+        return chequeos, rotos
+    for f in sorted(Path(carpeta).glob("*.js")):
+        chequeos.append({"id": f.stem, "tipo": "js", "archivo": f.name, "codigo": f.read_text(encoding="utf-8"), "certeza": None})
+    for f in sorted(Path(carpeta).glob("*.py")):
+        if f.name.startswith("_"):
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location("chequeo_" + f.stem, f)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if not callable(getattr(mod, "chequear", None)):
+                raise ValueError("falta la función chequear(page, pantalla)")
+            chequeos.append({"id": getattr(mod, "ID", f.stem), "tipo": "py", "archivo": f.name, "fn": mod.chequear, "certeza": getattr(mod, "CERTEZA", None)})
+        except Exception as ex:
+            rotos.append({"pantalla": "(proyecto)", "sistema": "", "ancho": 0, "tema": "", "tipo": "chequeo_roto", "selector": f.name,
+                          "detalle": "no cumple el contrato: %s" % str(ex).splitlines()[0][:200], "certeza": "medida", "origen": "proyecto"})
+    return chequeos, rotos
+
+
+JS_ENVOLTURA = """async (u) => {
+  const module = { exports: {} }; const exports = module.exports;
+  %s
+  ;const c = module.exports;
+  if (!c || typeof c.chequear !== 'function' || !c.id) return { contrato: 'module.exports necesita id y chequear()' };
+  const r = await c.chequear(u);
+  return { id: c.id, certeza: c.certeza || null, fallas: Array.isArray(r) ? r : (r ? [r] : []) };
+}"""
+
+
+def _chequeos_propios(pg, pan, u, acum):
+    out = []
+    for c in acum["opc"].get("chequeos") or []:
+        try:
+            if c["tipo"] == "js":
+                r = pg.evaluate(JS_ENVOLTURA % c["codigo"], u)
+                if r.get("contrato"):
+                    raise ValueError(r["contrato"])
+                cid, certeza, items = r["id"], r.get("certeza") or c["certeza"], r["fallas"]
+            else:
+                cid, certeza, items = c["id"], c["certeza"], c["fn"](pg, pan) or []
+            for it in items:
+                it = {"detalle": it} if isinstance(it, str) else dict(it)
+                cz = it.get("certeza") or certeza or "sospecha"
+                out.append({"tipo": it.get("tipo") or "proyecto_%s" % cid, "certeza": cz if cz in ("medida", "sospecha") else "sospecha",
+                            "selector": str(it.get("selector", ""))[:200], "detalle": str(it.get("detalle", ""))[:240], "origen": "proyecto"})
+        except Exception as ex:  # why: un chequeo del proyecto mal escrito no puede tumbar la corrida; se informa
+            out.append({"tipo": "chequeo_roto", "selector": c["archivo"], "detalle": str(ex).splitlines()[0][:240] if str(ex) else type(ex).__name__,
+                        "certeza": "medida", "origen": "proyecto"})
+    return out
+
+
 def medir(cfg, base, salida, anchos, temas, filtro_sistema=None, filtro_pantalla=None, headless=True, motores=("chromium",), acum=None):
     from playwright.sync_api import sync_playwright
     umbrales = {**UMBRALES, **cfg.get("umbrales", {})}
-    acum = acum if acum is not None else {"fallas": [], "componentes": [], "titulos": {}}
+    acum = acum if acum is not None else nuevo_acum({"limites": _limites(cfg)})
     fallas, componentes, titulos = acum["fallas"], acum["componentes"], acum["titulos"]
     pantallas = [p for p in cfg["pantallas"] if (not filtro_sistema or p.get("sistema") in filtro_sistema)
                  and (not filtro_pantalla or p["id"] in filtro_pantalla)]
@@ -471,6 +617,12 @@ def _pantalla(nav, motor, primero, varios, pan, cfg, base, salida, capturas, anc
     validos = [x for x in anchos if pan.get("ancho_min", 0) <= x <= pan.get("ancho_max", 99999)]
     for tema in temas:
         for ancho in validos:
+            motivo_corte = _excedido(acum)
+            if motivo_corte:
+                acum["incompleto"] = acum["incompleto"] or motivo_corte
+                if pan["id"] not in acum["omitidas"]:
+                    acum["omitidas"].append(pan["id"])
+                return
             ctx, movil = _contexto(nav, ancho, tema, cfg, estado, umbrales, motor)
             errores, red, res = [], [], []
             try:
@@ -504,6 +656,7 @@ def _pantalla(nav, motor, primero, varios, pan, cfg, base, salida, capturas, anc
                     if tema == temas[0] and primero:
                         componentes += [{**c, "pantalla": pan["id"], "sistema": pan.get("sistema", "")} for c in r["componentes"]]
                         titulos[pan["id"]] = r.get("titulo", "")
+                        acum["silencios"][pan["id"]] = r.get("silencios", {})
                         res += _foco(pg, umbrales)
                 png = capturas / ("%s-%d-%s%s.png" % (pan["id"], ancho, tema, "" if primero else "-" + motor))
                 try:
@@ -513,8 +666,14 @@ def _pantalla(nav, motor, primero, varios, pan, cfg, base, salida, capturas, anc
                         pg.screenshot(path=str(png))
                     except Exception as ex2:
                         res.append({"tipo": "captura_fallida", "selector": "", "detalle": str(ex2).splitlines()[0][:200]})
-                if png.exists() and primero:
-                    caps.append(png)
+                if png.exists():
+                    acum["capturas"] += 1
+                    if primero:
+                        caps.append(png)
+                        acum["medidas"].append({"id": pan["id"], "sistema": pan.get("sistema", ""), "ancho": ancho, "tema": tema,
+                                                "hash_png": hashlib.sha256(png.read_bytes()).hexdigest()[:16]})
+                        res += _baseline(png, pan, ancho, tema, umbrales, acum)
+                res += _chequeos_propios(pg, pan, u, acum)
             except Exception as ex:  # why: una pantalla que no carga es una falla, no el fin del recorrido
                 res = [{"tipo": "no_carga", "selector": pan["ruta"], "detalle": str(ex).splitlines()[0][:240]}]
             finally:
@@ -537,21 +696,46 @@ def finalizar(acum, umbrales):
         if len(ids) > 1:
             f2.append({"tipo": "titulo_duplicado", "selector": "title", "detalle": "«%s» en %d pantallas: %s" % (t[:60], len(ids), ", ".join(ids[:6]))})
     acum["fallas"] += [{"pantalla": "(todas)", "sistema": "", "ancho": 0, "tema": "", **h} for h in f2]
+    if acum["incompleto"]:
+        acum["fallas"].append({"pantalla": "(todas)", "sistema": "", "ancho": 0, "tema": "", "tipo": "limite_alcanzado", "selector": "limites",
+                               "detalle": "se cortó por %s; sin medir: %s" % (acum["incompleto"], ", ".join(acum["omitidas"][:12]) or "(lo que faltaba de la pantalla en curso)")})
     apagados = set(umbrales["desactivar"])
+    acum["desactivadas"] = Counter(h["tipo"] for h in acum["fallas"] if h["tipo"] in apagados)
     acum["fallas"][:] = [h for h in acum["fallas"] if h["tipo"] not in apagados]
     for h in acum["fallas"]:
         h.setdefault("certeza", "sospecha" if h["tipo"] in SOSPECHA else "medida")
     return resumen
 
 
-def informe(fallas, resumen, salida, cfg):
+def silenciamientos(acum, umbrales):
+    """Todo lo que baja la cuenta sin arreglar nada: marcas data-revision-ok en la página y tipos apagados en el adaptador."""
+    marcas = Counter()
+    for d in acum["silencios"].values():
+        marcas.update(d)
+    return {"total": sum(marcas.values()) + len(umbrales["desactivar"]), "data_revision_ok": dict(marcas),
+            "umbrales_desactivar": {t: acum["desactivadas"].get(t, 0) for t in umbrales["desactivar"]}}
+
+
+def informe(fallas, resumen, salida, cfg, acum=None, umbrales=None, cfg_path=None):
+    acum, umbrales = acum or nuevo_acum(), umbrales or UMBRALES
     por_tipo = Counter(f["tipo"] for f in fallas)
     por_certeza = Counter(f.get("certeza", "medida") for f in fallas)
+    cuenta = Counter((f["pantalla"], f["ancho"], f["tema"], f.get("certeza")) for f in fallas)
+    medidas = [{**m, "fallas": cuenta[(m["id"], m["ancho"], m["tema"], "medida")], "sospechas": cuenta[(m["id"], m["ancho"], m["tema"], "sospecha")]} for m in acum["medidas"]]
+    sil = silenciamientos(acum, umbrales)
+    minutos = round((time.time() - acum["t0"]) / 60, 2)
     datos = {"proyecto": cfg.get("nombre", ""), "fecha": datetime.now().isoformat(timespec="minutes"), "total": len(fallas),
-             "por_tipo": dict(por_tipo), "por_certeza": dict(por_certeza), "fallas": fallas, "consistencia": resumen}
+             "por_tipo": dict(por_tipo), "por_certeza": dict(por_certeza), "fallas": fallas, "consistencia": resumen,
+             "completo": not acum["incompleto"], "limite": acum["incompleto"], "minutos": minutos, "capturas": acum["capturas"],
+             "config_hash": hash_config(cfg_path) if cfg_path else "", "pantallas_medidas": medidas,
+             "silenciamientos": sil, "baseline": dict(acum["baseline"]), "chequeos_propios": len(acum["opc"].get("chequeos") or [])}
     (salida / "informe.json").write_text(json.dumps(datos, ensure_ascii=False, indent=1), encoding="utf-8")
     md = ["# Medición — %s (%s)" % (datos["proyecto"], datos["fecha"]), "", "Total: **%d** (%d medidas, %d sospechas: mirarlas con criterio)" % (
         len(fallas), por_certeza.get("medida", 0), por_certeza.get("sospecha", 0)), ""]
+    if acum["incompleto"]:
+        md += ["**Medición incompleta**: se cortó por %s." % acum["incompleto"], ""]
+    if acum["baseline"]:
+        md += ["Baseline visual: " + ", ".join("%d %s" % (v, k) for k, v in acum["baseline"].items()), ""]
     md += ["| tipo | cantidad |", "|---|---|"] + ["| %s | %d |" % kv for kv in por_tipo.most_common()] + [""]
     agrupadas = defaultdict(list)
     for f in fallas:
@@ -559,8 +743,15 @@ def informe(fallas, resumen, salida, cfg):
     md += ["## Fallas (agrupadas: una línea por defecto, con dónde aparece)", ""]
     for (tipo, sel, _), fs in sorted(agrupadas.items(), key=lambda kv: (kv[0][0], -len(kv[1])))[:400]:
         donde = sorted({"%s@%s/%s%s" % (f["pantalla"], f["ancho"], f["tema"], "/" + f["motor"] if f.get("motor") else "") for f in fs})
-        md.append("- **%s**%s `%s` — %s · %s" % (tipo, " (sospecha)" if fs[0].get("certeza") == "sospecha" else "", sel, fs[0]["detalle"],
-                                               ", ".join(donde[:6]) + (" y %d más" % (len(donde) - 6) if len(donde) > 6 else "")))
+        md.append("- **%s**%s%s `%s` — %s · %s" % (tipo, " (sospecha)" if fs[0].get("certeza") == "sospecha" else "", " [proyecto]" if fs[0].get("origen") == "proyecto" else "",
+                                                  sel, fs[0]["detalle"], ", ".join(donde[:6]) + (" y %d más" % (len(donde) - 6) if len(donde) > 6 else "")))
+    md += ["", "## Silenciamientos: %d" % sil["total"], ""]
+    if not sil["total"]:
+        md.append("Ninguno: nada se bajó de la cuenta sin arreglarlo.")
+    for k, n in sorted(sil["data_revision_ok"].items()):
+        md.append("- `data-revision-ok=\"%s\"`: %d elemento(s) en las pantallas medidas" % (k, n))
+    for t, n in sil["umbrales_desactivar"].items():
+        md.append("- `umbrales.desactivar` «%s»: ocultó %d falla(s) en esta corrida" % (t, n))
     md += ["", "## Formas de cada componente (de la más usada a la menos)", ""]
     for clase, formas in resumen.items():
         md.append("### %s (%d formas)" % (clase, len(formas)))
@@ -569,6 +760,141 @@ def informe(fallas, resumen, salida, cfg):
         md.append("")
     (salida / "informe.md").write_text("\n".join(md), encoding="utf-8")
     return datos
+
+
+def registrar_metricas(raiz, cfg, datos):
+    """Una fila por corrida en .claude/revision/metricas.json (acumulativo): cajón 1 = fallas medidas, cajón 2 = sospechas."""
+    ruta = rev_dir(raiz) / "metricas.json"
+    try:
+        filas = json.loads(ruta.read_text(encoding="utf-8"))
+        if not isinstance(filas, list):
+            raise ValueError
+    except FileNotFoundError:
+        filas = []
+    except ValueError:
+        ruta.replace(ruta.with_suffix(".json.corrupto"))  # why: no perder el historial ilegible; se guarda aparte y se empieza otro
+        filas = []
+    filas.append({"fecha": datos["fecha"], "pantallas_en_mapa": len(cfg.get("pantallas") or []), "hallazgos_cajon1": datos["por_certeza"].get("medida", 0),
+                  "cajon2": datos["por_certeza"].get("sospecha", 0), "chequeos_propios": datos["chequeos_propios"], "minutos": datos["minutos"]})
+    ruta.write_text(json.dumps(filas, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+# --- validar: ¿el adaptador sirve? doctor, login de cada rol y una pantalla medida ---
+def validar_config(cfg):
+    errores, avisos = [], []
+    num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)  # noqa: E731
+    if "autonomia" in cfg and cfg["autonomia"] not in ("acompanado", "noche"):
+        errores.append("autonomia debe ser \"acompanado\" o \"noche\" (vale %r)" % (cfg["autonomia"],))
+    if "vueltas" in cfg and (not isinstance(cfg["vueltas"], int) or isinstance(cfg["vueltas"], bool) or cfg["vueltas"] < 1):
+        errores.append("vueltas debe ser un entero >= 1 (vale %r)" % (cfg["vueltas"],))
+    for campo, claves in (("presupuesto", ("tokens", "minutos", "vueltas")), ("limites", ("max_minutos", "max_capturas"))):
+        v = cfg.get(campo)
+        if v is None:
+            continue
+        if not isinstance(v, dict):
+            errores.append("%s debe ser un objeto con %s" % (campo, ", ".join(claves)))
+            continue
+        for k, x in v.items():
+            if k not in claves:
+                avisos.append("%s.%s no se conoce (se ignora); válidos: %s" % (campo, k, ", ".join(claves)))
+            elif not num(x) or x <= 0:
+                errores.append("%s.%s debe ser un número mayor que 0 (vale %r)" % (campo, k, x))
+    um = cfg.get("umbrales")
+    if um is not None and not isinstance(um, dict):
+        errores.append("umbrales debe ser un objeto")
+    for k, x in (um or {}).items() if isinstance(um, dict) else []:
+        if k not in UMBRALES:
+            avisos.append("umbrales.%s no se conoce (se ignora)" % k)
+        elif isinstance(UMBRALES[k], bool) != isinstance(x, bool) or (num(UMBRALES[k]) != num(x) and not isinstance(UMBRALES[k], bool)) or isinstance(UMBRALES[k], list) != isinstance(x, list):
+            errores.append("umbrales.%s tiene el tipo equivocado (vale %r; por defecto %r)" % (k, x, UMBRALES[k]))
+    if "doctor" in cfg and not (isinstance(cfg["doctor"], str) and cfg["doctor"].strip()):
+        errores.append("doctor debe ser un comando (texto)")
+    ids, roles = set(), set(((cfg.get("login") or {}).get("roles") or {}).keys())
+    if not isinstance(cfg.get("pantallas"), list) or not cfg.get("pantallas"):
+        errores.append("pantallas debe ser una lista con al menos una pantalla")
+    for p in cfg.get("pantallas") or []:
+        if not isinstance(p, dict) or not p.get("id") or not p.get("ruta"):
+            errores.append("cada pantalla necesita id y ruta (%r)" % (p,))
+            continue
+        if p["id"] in ids:
+            errores.append("id de pantalla repetido: %s" % p["id"])
+        ids.add(p["id"])
+        if p.get("rol") and roles and p["rol"] not in roles:
+            avisos.append("la pantalla %s pide el rol %r y login.roles no lo tiene" % (p["id"], p["rol"]))
+    return errores, avisos
+
+
+def validar(cfg, cfg_path, raiz, base, a, motores):
+    from playwright.sync_api import sync_playwright
+    errores, avisos = validar_config(cfg)
+    for e in errores:
+        print("ERROR  %s" % e)
+    for w in avisos:
+        print("aviso  %s" % w)
+    if errores:
+        print("\nEl adaptador tiene %d error(es): corregilos en %s y volvé a correr --validar." % (len(errores), cfg_path))
+        return 2
+    u = {**UMBRALES, **cfg.get("umbrales", {})}
+    print("adaptador: %s (%d pantallas) | autonomia=%s vueltas=%s" % (cfg.get("nombre", "?"), len(cfg["pantallas"]), cfg.get("autonomia", "(acompanado)"), cfg.get("vueltas", "(5)")))
+    print("presupuesto: %s | limites: %s" % (cfg.get("presupuesto") or "(sin tope)", cfg.get("limites") or "(sin tope)"))
+    print("umbrales distintos del defecto: %s" % ({k: v for k, v in (cfg.get("umbrales") or {}).items() if UMBRALES.get(k) != v} or "(ninguno)"))
+    ok = True
+    with Instancia(cfg, raiz) as inst:
+        if not a.url:
+            inst.levantar(base)
+        print("OK     la instancia responde en %s" % base)
+        doctor = cfg.get("doctor")
+        if doctor:
+            try:
+                r = subprocess.run(doctor, shell=True, cwd=raiz, capture_output=True, text=True, timeout=60, encoding="utf-8", errors="replace")
+                if r.returncode:
+                    ok = False
+                    print("FALLA  doctor (exit %d): %s\n       -> el chequeo de solo lectura del adaptador no pasa: corregí la instancia o el comando \"doctor\"." % (
+                        r.returncode, (r.stdout + r.stderr).strip()[-200:] or "sin salida"))
+                else:
+                    print("OK     doctor")
+            except subprocess.TimeoutExpired:
+                ok = False
+                print("FALLA  doctor: más de 60 s sin terminar; un chequeo de solo lectura tiene que ser rápido")
+        else:
+            print("aviso  el adaptador no tiene \"doctor\" (recomendado: un comando de solo lectura que diga si la instancia sirve)")
+        privado = Path(tempfile.mkdtemp(prefix="revision-validar-"))
+        try:
+            with sync_playwright() as pw:
+                nav = _lanzar(pw, "chromium", not a.ver)
+                try:
+                    estados = _sesiones(nav, cfg, base, privado, u)
+                finally:
+                    nav.close()
+            roles = (cfg.get("login") or {}).get("roles") or {}
+            for rol in roles:
+                if estados.get(rol):
+                    print("OK     login como %s" % rol)
+                else:
+                    ok = False
+                    print("FALLA  login como %s: revisá login.tipo/ruta/credenciales de prueba (el motivo está en el aviso de arriba)" % rol)
+            if not roles:
+                print("OK     sin login (se mide sin sesión)")
+            candidatas = [p for p in cfg["pantallas"] if (not a.pantalla or p["id"] in a.pantalla) and (not p.get("rol") or estados.get(p["rol"]) or not roles)]
+            if not candidatas:
+                ok = False
+                print("FALLA  no hay una pantalla medible (ninguna coincide con --pantalla o todas piden un rol cuyo login falló)")
+            else:
+                p0 = candidatas[0]
+                acum = nuevo_acum({"limites": _limites(cfg)})
+                cfg1 = {**cfg, "pantallas": [p0]}
+                medir(cfg1, base, privado / "salida", (1366,), (tuple(cfg.get("temas", TEMAS))[0],), headless=not a.ver, acum=acum)
+                tipos = Counter(f["tipo"] for f in acum["fallas"])
+                if tipos.get("no_carga") or tipos.get("sin_sesion"):
+                    ok = False
+                    print("FALLA  la pantalla %s no se pudo medir: %s\n       -> revisá ruta, esperar y pasos de esa pantalla en el adaptador" % (
+                        p0["id"], "; ".join(f["detalle"] for f in acum["fallas"] if f["tipo"] in ("no_carga", "sin_sesion"))[:200]))
+                else:
+                    print("OK     medí %s (1366, %s): %d hallazgo(s), solo informativo; --validar no juzga la calidad" % (p0["id"], tuple(cfg.get("temas", TEMAS))[0], len(acum["fallas"])))
+        finally:
+            shutil.rmtree(privado, ignore_errors=True)
+    print("\n%s" % ("El adaptador sirve: podés medir." if ok else "El adaptador NO está listo: corregí las líneas FALLA y repetí --validar."))
+    return 0 if ok else 1
 
 
 # --- descubrimiento: crawl BFS de enlaces del mismo origen, solo lectura (nunca clic en botones, nunca rutas de salir/borrar) ---
@@ -661,6 +987,7 @@ def descubrir(cfg, base, rol, max_paginas, profundidad, headless):
 
 
 def main(argv=None):
+    utf8()
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--config", default=".claude/revision/proyecto.json")
     ap.add_argument("--url", help="instancia de PRUEBA ya levantada; pisa la del adaptador")
@@ -675,6 +1002,12 @@ def main(argv=None):
     ap.add_argument("--rol", help="con --descubrir: rol del login del adaptador con el que recorrer")
     ap.add_argument("--max-paginas", type=int, default=40)
     ap.add_argument("--profundidad", type=int, default=2)
+    ap.add_argument("--validar", action="store_true", help="valida el adaptador: tipos del config, doctor, login de cada rol y mide UNA pantalla (exit 0 = sirve)")
+    ap.add_argument("--chequeos", help="carpeta con chequeos del proyecto (*.js / *.py); por defecto .claude/revision/chequeos/ si existe")
+    ap.add_argument("--baseline", action="store_true", help="compara cada captura con .claude/revision/baseline/ (la crea si falta)")
+    ap.add_argument("--aprobar-baseline", action="store_true", help="regenera el baseline de las --pantalla pedidas; exige --motivo")
+    ap.add_argument("--motivo", help="con --aprobar-baseline: por qué cambia la referencia (queda en baseline/CAMBIOS.tsv)")
+    ap.add_argument("--alcance", help="alcance.json de alcance.py: mide solo sus pantallas a revisar y sus sondas")
     a = ap.parse_args(argv)
 
     try:
@@ -709,26 +1042,55 @@ def main(argv=None):
         print("%d pantallas descubiertas -> %s" % (len(pantallas), destino))
         return 0
 
-    if not cfg.get("pantallas"):
-        sys.exit("El adaptador no tiene \"pantallas\". Armalas a mano o corré con --descubrir.")
+    if a.validar:
+        return validar(cfg, cfg_path, raiz, base, a, motores)
+    errores, _ = validar_config(cfg)
+    if errores:
+        sys.exit("El adaptador tiene errores (corré --validar para el detalle): " + "; ".join(errores[:3]))
+    if a.aprobar_baseline:
+        a.baseline = True
+        if not (a.motivo or "").strip():
+            sys.exit("--aprobar-baseline exige --motivo \"por qué cambia la referencia\" (queda anotado en baseline/CAMBIOS.tsv). Sin motivo no se regenera.")
+        if not a.pantalla:
+            sys.exit("--aprobar-baseline solo regenera las pantallas que pidas: pasá --pantalla ID.")
+    if a.baseline:
+        try:
+            import PIL.Image  # noqa: F401
+        except ImportError:
+            sys.exit("--baseline necesita Pillow: python -m pip install pillow")
+    filtro = list(a.pantalla) if a.pantalla else None
+    if a.alcance:
+        al = json.loads(Path(a.alcance).read_text(encoding="utf-8"))
+        ids = list(dict.fromkeys(list(al.get("revisar", [])) + list(al.get("sondas", []))))
+        filtro = [i for i in ids if not a.pantalla or i in a.pantalla]
+        if not filtro:
+            print("Nada que medir: el alcance no tiene pantallas a revisar ni sondas.")
+            return 0
     anchos = tuple(int(x) for x in a.anchos.split(",")) if a.anchos else (RAPIDO if a.rapido else tuple(cfg.get("anchos", ANCHOS)))
     temas = tuple(cfg.get("temas", TEMAS))
     salida = Path(a.salida) if a.salida else raiz / ".claude" / "revision" / "salida" / datetime.now().strftime("%Y%m%d-%H%M%S")
     salida.mkdir(parents=True, exist_ok=True)
-    (raiz / ".claude" / "revision").mkdir(parents=True, exist_ok=True)
-    acum = {"fallas": [], "componentes": [], "titulos": {}}
+    rev_dir(raiz).mkdir(parents=True, exist_ok=True)
+    carpeta_chq = Path(a.chequeos) if a.chequeos else rev_dir(raiz) / "chequeos"
+    if a.chequeos and not carpeta_chq.is_dir():
+        sys.exit("No existe la carpeta de chequeos %s" % carpeta_chq)
+    chequeos, rotos = cargar_chequeos(carpeta_chq)
     umbrales = {**UMBRALES, **cfg.get("umbrales", {})}
+    acum = nuevo_acum({"limites": _limites(cfg), "chequeos": chequeos, "diffs": salida / "diffs",
+                       "baseline_dir": rev_dir(raiz) / "baseline" if a.baseline else None, "aprobar": a.aprobar_baseline, "motivo": a.motivo or ""})
+    acum["fallas"] += rotos
     resumen, empezo = {}, False
     try:  # why: pase lo que pase al apagar o a mitad del recorrido, lo medido hasta ahí queda escrito
         with Instancia(cfg, raiz) as inst:
             if not a.url:
                 inst.levantar(base)
             empezo = True
-            medir(cfg, base, salida, anchos, temas, a.sistema, a.pantalla, headless=not a.ver, motores=motores, acum=acum)
+            medir(cfg, base, salida, anchos, temas, a.sistema, filtro, headless=not a.ver, motores=motores, acum=acum)
     finally:
         if empezo:
             resumen = finalizar(acum, umbrales)
-            datos = informe(acum["fallas"], resumen, salida, cfg)
+            datos = informe(acum["fallas"], resumen, salida, cfg, acum, umbrales, cfg_path)
+            registrar_metricas(raiz, cfg, datos)
             print("%d fallas %s\n-> %s" % (datos["total"], dict(Counter(f["tipo"] for f in acum["fallas"]).most_common()), salida / "informe.md"))
     return 1 if acum["fallas"] else 0
 

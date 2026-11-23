@@ -27,6 +27,7 @@ ESPERADOS = {
     "sin_titulo": {"sin_titulo"},
 }
 resultados = []
+sys.stdout.reconfigure(errors="replace")
 
 
 def check(nombre, ok, detalle=""):
@@ -40,8 +41,8 @@ def puerto_libre():
         return s.getsockname()[1]
 
 
-def servidor(puerto):
-    p = subprocess.Popen([sys.executable, "-m", "http.server", str(puerto), "--bind", "127.0.0.1", "--directory", str(SITIO)],
+def servidor(puerto, directorio=SITIO):
+    p = subprocess.Popen([sys.executable, "-m", "http.server", str(puerto), "--bind", "127.0.0.1", "--directory", str(directorio)],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if not medir._responde("http://127.0.0.1:%d/" % puerto, espera=10):
         p.kill()
@@ -129,6 +130,10 @@ def main():
             check("descubrir encuentra las pantallas", {"/", "/limpio.html", "/defectos.html"} <= set(rutas), str(rutas) + r.stderr[-200:])
             check("descubrir colapsa plantillas (max 2 ejemplos)", len(items) == 2, str(items))
             check("descubrir nunca visita salir/eliminar/archivos/externos", not any(k in x for x in rutas for k in ("salir", "eliminar", ".pdf", "example")), str(rutas))
+
+            # 8. gobierno: validar, límites, chequeos del proyecto, baseline, silenciamientos, alcance, estado, presupuesto, promover
+            import pruebas_gobierno
+            pruebas_gobierno.ejecutar(sys.modules[__name__], url, tmp)
     finally:
         srv.terminate()
         try:

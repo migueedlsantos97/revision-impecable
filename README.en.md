@@ -151,6 +151,25 @@ three runs, which technique was improvised, and which reviewer delivered little 
 does not fire for three consecutive runs is deleted, with a note on why, so the skill sharpens instead of bloating.
 Checks that came from an escape carry the mark `[caso real]` ("real case").
 
+Learning is double. Project-specific lessons improve the project's own adapter, checks, rules and feature map right away;
+general ones become anonymised candidates that go to this skill by pull request (`skill/references/mejora-continua.md`,
+in Spanish). Each run records metrics; if three runs in a row do not lower the cost, the skill switches to incremental
+review (`skill/references/incremental.md`): per-system state files record what was verified at which commit, and the next
+run reviews only what changed plus what shares it.
+
+## Where the ideas come from
+
+Version 2 is inspired by how Lauren Tan (poteto) works with agents: the interview with Matt Pocock
+(https://www.youtube.com/watch?v=MN9dGgmLyso, primary source), the pstack skills
+(https://github.com/cursor/plugins/tree/main/pstack) and, as a complementary talk, a third-party re-upload of one of her
+presentations on trust and verification (https://www.youtube.com/watch?v=PaPpyQocMww; no agent-count figures are taken
+from it). **From those sources**: verification first (hands and eyes plus a feature map), trust before scaling (light
+scale by default), one change / one measurement / keep or revert with a decision log, safe pause and resume notes, blind
+evals with a judge from another model, upkeep of the feature map, a ladder of guarantees (structure, hard check, test,
+soft text), and an independent reviewer of the unattended trail. **Specific to this skill**: the measurement script and
+its design thresholds, the 20 coverage categories, the user-correction rule, the per-project adapter, incremental review
+by system, the visual baseline, and the night-mode safety contract (own worktree, pre-push guard, `no_tocar` check).
+
 What is specific to a project stays in the project. What is useful for any app only enters this skill with an invented
 minimal case and after passing the privacy filter: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 

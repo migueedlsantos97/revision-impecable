@@ -28,6 +28,15 @@ en la tabla de cobertura (paso 3).
    (`.claude/revision/`).
 6. **Cobertura propia, no solo lo que se pidió o se vio.** Lo que la persona
    señala es UNA señal más (ver "Corrección del usuario"); nunca reduce el alcance.
+7. **Escalera de garantías: estructura > chequeo duro > test > texto blando.**
+   Una regla que solo vive en texto se olvida; si una persona tuvo que hacer
+   cumplir una invariante en una revisión, esa invariante se vuelve chequeo.
+8. **La confianza se gana antes de escalar.** Se empieza ligero (script + 2
+   revisores) y se amplía solo si la medición o el tamaño lo justifican; se gasta
+   primero en restricciones que hacen acertar hasta al agente más simple
+   (`references/coordinacion.md`).
+9. **El estado vive en disco**, no en la cabeza del agente: checkpoint, relevo y
+   estado por sistema (`references/relevo.md`, `references/incremental.md`).
 
 Estándar de diseño de base: `references/hig.md`. Las reglas del proyecto mandan.
 Valores numéricos, anchos y criterios de parada: **una sola tabla**,
@@ -37,9 +46,11 @@ Valores numéricos, anchos y criterios de parada: **una sola tabla**,
 
 - **Acompañado** (por defecto): los cambios de diseño grandes se muestran antes.
 - **Noche** ("dejalo corriendo", "work alone overnight", o `"autonomia":"noche"`):
-  no se pregunta nada; se decide con las reglas, se commitea en una rama. Si no
-  se puede construir un adaptador que arranque, **se aborta con un informe** que
-  dice qué falta (no se inventa). Ver `references/noche.md`.
+  no se pregunta nada; se decide con las reglas, se trabaja en un worktree y una
+  rama propios, con presupuesto, checkpoints y relevo si se llena el contexto, y
+  al volver la persona lee `LEEME-AL-VOLVER.md`. Si no se puede construir un
+  adaptador que arranque, **se aborta con un informe** (no se inventa). Ver
+  `references/noche.md` y `references/relevo.md`.
 
 **Límites que ningún modo cruza:** nunca producción con escritura, nunca datos
 reales, nunca deploy, nunca push a la rama principal ni `--force`, nunca borrar
@@ -55,10 +66,19 @@ Buscá `.claude/revision/proyecto.json`.
 - **No existe:** generalo con `references/adaptador.md` (empieza por
   "Descubrimiento en 10 minutos") y probalo de punta a punta. En modo noche, si
   no arranca, abortá con informe.
-- **Existe:** corré su `doctor`; agregá pantallas nuevas (rutas, menús, commits).
+- **Existe:** corré `medir.py --validar` (doctor, login por rol, una pantalla);
+  agregá pantallas nuevas (rutas, menús, commits) y, si el mapa tiene días, el
+  pase de mantenimiento (`references/coordinacion.md`, §5).
 
 ### 1. Preparar
-- Rama `revision/<fecha>` (obligatoria de noche).
+- Rama `revision/<fecha>` (obligatoria de noche, y en worktree propio).
+- Si existe `checkpoint.json` sin terminar: **reanudar** (`references/relevo.md`),
+  no empezar de cero.
+- Si hay `estado/` y `dependencias.json`: `scripts/alcance.py` decide qué revisar
+  y qué queda "vigente @sha" (`references/incremental.md`). Sin estado: completa.
+- **Escala**: ligera por defecto; ampliada o completa según
+  `references/coordinacion.md`. Presupuesto y tope en el adaptador
+  (`scripts/presupuesto.py`).
 - Activá los guardrails del repo (`.githooks/` con `core.hooksPath`, linters de
   CI): un commit tuyo no se saltea lo que se le exige a una persona. [caso real #36]
 - Instancia de **prueba**; corré los tests existentes y anotá el número.
@@ -101,7 +121,10 @@ siguiente. Lo que la persona señaló cuenta como una fila más, no la sustituye
 
 ### 4. Revisores en paralelo (criterio)
 Encargos en `references/encargos.md`, técnicas en `references/tecnicas.md`.
-Despachá **todos juntos, en un mensaje**, cada uno con su sección entera, la
+Escala y modelo por rol: `references/coordinacion.md` (**ligera**: revisores 1 y
+2; se suman los demás si la medición lo pide, o todos si el pedido es "revisá
+todo", es la primera revisión o hubo escapes). Despachá los de la escala
+elegida **juntos, en un mensaje**, cada uno con su sección entera, la
 raíz, `informe.md`, capturas, feature map, `cobertura.md` y el contrato de
 salida. **Cada revisor usa su propio contexto de navegador** (perfil/contexto
 Playwright separado); los que cambian datos (1, 5, 6) además su propia
@@ -118,6 +141,13 @@ instancia y datos.
 | 7 | Web pública (solo si `"publica":true`) | navegadores, rendimiento, SEO, cómo se comparte, enlaces |
 
 Si no es pública, el revisor 7 no corre y se anota N/A en las filas 15 y 17.
+Lo que un revisor no corre por la escala se marca N/A "escala ligera" y se
+audita en la corrida siguiente.
+
+**Verificar la cadena**: antes de dar por cubierta una fila, se contrasta lo que
+el revisor dice haber mirado con su transcripción o registro (qué archivos y
+capturas abrió realmente); una afirmación sin apertura invalida la fila y el
+revisor se re-despacha (`references/coordinacion.md`, §4).
 Proyecto solo API/CLI: ver encargos.md, "Superficies no web".
 
 **Encargo puntual:** se despachan igual **todos** los revisores aplicables, con
@@ -154,15 +184,28 @@ queda anotado con la captura de antes.
   componente, se unifican en una.
 - Rediseño con `hig.md` cuando arreglar de a uno no alcanza; misma solución en todos lados.
 - Un commit por tema, explicando qué le pasaba a la persona.
-- Tras cada tanda, **volver a medir todo**, correr tests y las funciones del mapa.
-- Repetí 4-7 hasta cumplir el criterio de parada de `umbrales.md`.
+- **Un cambio, una medición, keep o revert**: se mide contra la vuelta anterior;
+  si no baja lo que debía o rompe algo, se revierte y queda la fila en
+  `decisiones.tsv` (antes / después / delta / tests / veredicto / evidencia).
+- Arreglos en paralelo: zonas de archivos con un solo dueño y worktrees
+  (`references/coordinacion.md`, §3).
+- Tras cada tanda, **volver a medir** (todo, o lo que `alcance.json` marque más
+  las sondas), correr tests y las funciones del mapa, y escribir el checkpoint.
+- **Baseline visual**: con la medición limpia, las capturas aprobadas se guardan
+  (`medir.py --aprobar-baseline --motivo "..."`); en las vueltas y corridas
+  siguientes `--baseline` compara y marca `regresion_visual`. Nunca se regenera
+  el baseline para hacer pasar un diff: solo con motivo escrito y captura.
+- Repetí 4-7 hasta cumplir el criterio de parada de `umbrales.md` (la meseta se
+  pivota una vez antes de parar; los silenciamientos cuentan en contra).
 
 ### 8. Fijar: que no pueda volver
 Por cada clase confirmada, la primera que funcione: (1) **estructura** (un solo
 componente/token); (2) **chequeo que falla** (genérico en `scripts/`, del
 proyecto en sus tests/lint); (3) **test**; (4) **texto** en el encargo o
 `reglas.md`, solo si necesita criterio. Probá que el chequeo nuevo **falla con
-el defecto real**.
+el defecto real**. Un chequeo propio vive en `.claude/revision/chequeos/` y se
+**engancha al pre-commit o al CI del proyecto** (si no se puede, queda como deuda
+en `reglas.md`); un chequeo que no corre donde se exige a una persona es texto.
 
 ### 9. Informe y aprender
 - `docs/revision-<fecha>.md` con `assets/plantilla-informe.md`: tabla de
@@ -171,8 +214,18 @@ el defecto real**.
   ahora), **falsos positivos**, **chequeos dormidos** (tres corridas sin
   disparar y se borran con constancia), **técnicas nuevas**, **revisores flojos**.
 - Aplicá los cambios, no los propongas, **en el proyecto**: reglas →
-  `.claude/revision/reglas.md`; bitácora de la corrida →
-  `.claude/revision/bitacora.md`; chequeos propios → sus tests.
+  `.claude/revision/reglas.md` (columna "lo hace cumplir" obligatoria);
+  bitácora de la corrida → `.claude/revision/bitacora.md`; chequeos propios →
+  `.claude/revision/chequeos/` y sus tests.
+- **Mejora continua doble** (`references/mejora-continua.md`): cada aprendizaje se
+  clasifica `general` o `proyecto` con una sola tabla. Lo del proyecto mejora su
+  adaptador, chequeos y mapa en el acto; lo general se candidatea. La corrida
+  escribe `metricas.json`: la app queda más cubierta y, si tres corridas no
+  bajan el costo, se pasa a revisión incremental.
+- Al estado verificado: `scripts/estado.py` registra por sistema qué quedó
+  verificado y en qué commit (solo los sistemas revisados).
+- En noche, `LEEME-AL-VOLVER.md` con la sección "Atención" escrita por **otro**
+  revisor (`references/noche.md`, §7).
 - **Cómo sube un aprendizaje a la skill:** nunca se escribe en la copia
   instalada. Un candidato a general se redacta en
   `.claude/revision/candidatos/<tema>.md` **sin** nombres de cliente o
@@ -187,6 +240,10 @@ el defecto real**.
 Cuando la persona señala un defecto concreto ("los encabezados están mal", "ese
 botón no se ve"), es **una señal más, no el nuevo alcance**. En orden:
 
+0. **Mapear el reporte al feature map**: un reporte vago ("no anda esto", una
+   captura sin texto) se ubica primero en `funciones/` (qué función, cómo se
+   llega, qué prueba que anda); si no está en el mapa, es un hueco del mapa y se
+   agrega.
 1. Arreglar el caso señalado, con antes/después.
 2. Nombrar su **clase** en una frase genérica ("jerarquía y alineación de
    encabezados") y barrerla en TODO el proyecto: cada instancia y variante
@@ -208,6 +265,9 @@ botón no se ve"), es **una señal más, no el nuevo alcance**. En orden:
 - Revisores entregaron, o está escrito cuáles no y por qué.
 - Todo hallazgo tiene veredicto; cajones 1 y 2 vacíos o con motivo escrito.
 - Tests pasan y hay más que al empezar; las funciones del mapa andan.
+- **Silenciamientos** (tipos desactivados, `data-revision-ok`, chequeos
+  borrados) no aumentaron sin motivo escrito; el informe los cuenta.
+- La cadena de los revisores se verificó (sin filas invalidadas pendientes).
 - Ningún componente tiene más formas que las permitidas ni cambia según el sistema.
 - Paso 9 hecho: bitácora del proyecto con entrada y reglas/adaptador cambiados
   (aunque sea para borrar algo).

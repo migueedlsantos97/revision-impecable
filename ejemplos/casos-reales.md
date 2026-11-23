@@ -45,6 +45,9 @@ PR (ver paso 9 de `SKILL.md`) y se numera al final.
 | 36 | Un commit pasó con el lint en rojo porque el pre-commit estaba versionado pero no activado en ese clon. | Activar los guardrails del repo antes de commitear. |
 | 37 | Se probó una función por una sola de sus entradas cómodas y el mapa listaba otras. | Una prueba que maneja una sola entrada está incompleta si el mapa lista otras. |
 | 38 | El globo de validación nativo ("Completa este campo") lo encontró el cliente mirando una captura, después de dar la revisión por cerrada; además, al esconder el input para dibujar una casilla propia, el globo quedaba sin dónde anclarse (un elemento de 1 px). | Esconder un control obliga a hacerse cargo de todo lo que el navegador dibujaba sobre él. |
+| 39 | Un revisor declaró haber recorrido el menú del celular y su hallazgo era correcto, pero la transcripción mostró que nunca abrió esa pantalla: lo había deducido del código. | La fila de cobertura se da por cubierta tras contrastar lo declarado con lo que el revisor realmente abrió. |
+| 40 | Una corrida "bajó" de 40 a 6 hallazgos desactivando tipos de falla y marcando elementos como aceptados. | La métrica de parada cuenta los silenciamientos; bajar hallazgos subiendo silenciamientos no es progreso. |
+| 41 | Una revisión incremental dio por vigente un sistema que consumía un archivo compartido que el mapa de dependencias no listaba. | Se valida el mapa tocando un token en una copia y se re-mide al azar una pantalla "vigente" en cada corrida. |
 
 ## Navegador integrado en segundo plano
 Algunos entornos de agente muestran el navegador en una pestaña que no tiene

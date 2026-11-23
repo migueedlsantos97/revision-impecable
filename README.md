@@ -57,12 +57,40 @@ En un proyecto propio no hace falta escribir el adaptador a mano: la primera vez
 ## La versión 2
 
 La primera versión despachaba once revisores que medían todo a mano: era
-exhaustiva y lenta. La segunda toma tres ideas de cómo trabaja Lauren Tan
-(poteto) con agentes ([la entrevista](https://www.youtube.com/watch?v=MN9dGgmLyso),
-[sus skills](https://github.com/cursor/plugins/tree/main/pstack)):
+exhaustiva y lenta. La segunda se inspira en cómo trabaja Lauren Tan (poteto)
+con agentes: [la entrevista con Matt Pocock](https://www.youtube.com/watch?v=MN9dGgmLyso)
+(canal primario), [sus skills](https://github.com/cursor/plugins/tree/main/pstack)
+y, como charla complementaria, [una exposición suya sobre confianza y
+verificación](https://www.youtube.com/watch?v=PaPpyQocMww) (reproducción de un
+tercero; no se toman de ahí cifras de cantidad de agentes).
 
+**Ideas que vienen de Lauren Tan / pstack** (y dónde viven en la skill):
 - **La verificación es lo primero**: darle al agente manos y ojos para usar la
-  app y ver el resultado. Sin eso no hay loop.
+  app y ver el resultado, con un mapa de funciones que le enseña a llegar a cada
+  una (`adaptador.md`: `funciones/`, `doctor`, evidencia que sobrevive al cierre).
+- **La confianza se gana antes de escalar**: no se lanzan muchos agentes sin
+  confiar en uno (`coordinacion.md`: escala ligera por defecto).
+- **Un cambio, una medición, keep o revert**, con un registro de decisiones y
+  metas chequeables (`noche.md`, `umbrales.md`).
+- **Pausa segura y relevo** con un resumen en disco (`relevo.md`).
+- **Evals ciegos** de la skill, con juez de otro modelo (`evals/playbook.md`).
+- **Mantener el mapa de funciones** con un lector por función y un pase en
+  vivo (`coordinacion.md`, §5).
+- **Escalera de garantías**: arquitectura y chequeos duros antes que reglas
+  blandas; si una persona hace cumplir una invariante en una revisión, se vuelve
+  chequeo.
+- **Un revisor distinto del que arregla** y un rastro de decisiones revisable
+  al volver (`SKILL.md`, `noche.md`).
+
+**Ideas propias de esta skill** (no vienen de esas fuentes): el script de medición
+con umbrales de diseño (`medir.py`, `hig.md`), la tabla de 20 categorías de
+cobertura, la regla de "corrección del usuario", el adaptador por proyecto, la
+revisión incremental por sistema con estado y dependencias (`incremental.md`), el
+baseline visual, el modo noche con contrato de seguridad (worktree, pre-push,
+`no_tocar`) y la mejora continua doble (`mejora-continua.md`).
+
+Resumen de las tres ideas de base:
+- **La verificación es lo primero**: sin manos y ojos no hay loop.
 - **Lo determinístico va a un script**, el criterio queda para los agentes.
 - **Se arregla el entorno, no el caso**: cada error se vuelve estructura
   (un componente compartido, un chequeo, un test) antes que texto.
@@ -75,10 +103,16 @@ reglas) vive en un **adaptador** dentro de ese proyecto, en
 El estándar de diseño de base son las Human Interface Guidelines de Apple,
 resumidas en `skill/references/hig.md`.
 
-Tiene un **modo noche**: trabaja sola en una rama, sin preguntar, decide con
-las reglas, rediseña si hace falta, y a la mañana deja un informe con capturas
-de antes y después y la lista de lo que necesita tu ojo. Nunca despliega ni
-toca datos reales.
+Tiene un **modo noche**: trabaja sola en un worktree y una rama propios, sin
+preguntar, decide con las reglas, rediseña si hace falta, lleva presupuesto y
+checkpoints (si se llena el contexto, deja un relevo y sigue en otra sesión) y a
+la mañana deja `LEEME-AL-VOLVER.md` con tres cifras (arreglado, necesita tu ojo,
+no verificado), capturas de antes y después y una sección "Atención" escrita por
+otro revisor. Nunca despliega, ni pushea a la rama principal, ni toca datos reales.
+
+Para proyectos con varios sistemas, la **revisión incremental** guarda qué quedó
+verificado y en qué commit, y la próxima vez revisa solo lo que cambió y lo que
+lo comparte (`skill/references/incremental.md`).
 
 ## El problema
 

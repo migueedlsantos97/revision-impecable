@@ -38,9 +38,21 @@ suma un margen.
 |---|---|
 | Bucle normal 4-7 | repetir hasta que los cajones 1 y 2 estén vacíos o con motivo escrito |
 | Tope de vueltas | `vueltas` del adaptador, 5 por defecto (suficiente para arreglar, volver a medir y absorber un efecto cascada) |
-| Estancamiento | si en **dos vueltas seguidas** no baja la cantidad de hallazgos, se para y se informa (en noche; en acompañado se avisa a la persona) |
-| Regresión | un arreglo que rompe otra cosa se arregla antes de seguir o se revierte |
-| Tiempo/costo | `limites.max_capturas` y `limites.max_minutos` del adaptador; si se superan, medir con `--rapido` y priorizar pantallas con commits recientes |
+| Estancamiento (meseta) | si en **dos vueltas seguidas** no baja la métrica, **pivotar una vez** (otro revisor, otra técnica, releer el origen, ampliar la escala); si la vuelta siguiente tampoco baja, **parar** y informar. Una meseta no es permiso para relajar el criterio |
+| Métrica de parada | no es solo "cantidad de hallazgos": cuenta junto con **silenciamientos** (`desactivar`, `data-revision-ok`, chequeos borrados), tests y cobertura. Bajar hallazgos subiendo silenciamientos no es progreso [caso real #40] |
+| Regresión | un arreglo que rompe otra cosa se arregla antes de seguir o **se revierte** (un cambio, una medición, keep o revert) |
+| Tiempo/costo | `limites.max_capturas`, `limites.max_minutos` y `presupuesto` (tokens) del adaptador, aplicados por `scripts/presupuesto.py`; si se acercan, `degradar` (`--rapido`, sin revisor 7, prioridad a lo cambiado) |
+
+## Presupuesto y escala
+
+| Decisión de `presupuesto.py decidir` | Cuándo |
+|---|---|
+| `seguir` | gastado < 70 % del presupuesto y la métrica baja |
+| `degradar` | gastado ≥ 70 %, o más de la mitad del tiempo gastado con el cajón 1 abierto |
+| `pivotar` | meseta de dos vueltas, una sola vez por corrida |
+| `parar` | predicado cumplido, presupuesto ≥ 95 %, segunda meseta o tope de vueltas; siempre en un punto seguro (`relevo.md`) |
+
+Escala por defecto: **ligera** (script + 2 revisores); ver `coordinacion.md`.
 
 ## Refutación
 
